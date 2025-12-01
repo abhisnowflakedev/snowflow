@@ -1,0 +1,300 @@
+// ============================================================================
+// DOMAIN: STORE OPERATIONS
+// Owner: Retail Operations Team
+// Refresh: Hourly for footfall, Daily for labour
+// ============================================================================
+
+model Store_Operations_Analytics
+    culture: en-GB
+    defaultPowerBIDataSourceVersion: powerBI_V3
+
+table dim_Date
+    lineageTag: shared-date-001
+
+table dim_Store
+    lineageTag: shared-store-001
+
+table fact_Footfall
+    lineageTag: foot-001
+    description: Store traffic counts by hour
+    
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column HourOfDay
+        dataType: int64
+
+    column FootfallCount
+        dataType: int64
+        annotation SynonymList = Visitors, Traffic, Customer Count
+
+    // === MEASURES ===
+
+    measure TotalFootfall = SUM(fact_Footfall[FootfallCount])
+        formatString: #,0
+        annotation SynonymList = Total Traffic, Total Visitors
+
+    measure ConversionRate = DIVIDE([TotalTransactions], [TotalFootfall], 0)
+        formatString: 0.0%
+        annotation Description = % visitors who purchased
+        annotation SynonymList = Browse to Buy, Conversion
+
+    measure SalesPerVisitor = DIVIDE([TotalSales], [TotalFootfall], 0)
+        formatString: £#,0.00
+
+    measure SalesPerSqFt = DIVIDE([TotalSales], SUM(dim_Store[SqFt_SalesFloor]), 0)
+        formatString: £#,0.00
+        annotation SynonymList = Sales Density, Productivity
+
+table fact_Labour
+    lineageTag: labour-001
+    description: Staff hours and productivity
+    
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column DepartmentKey
+        dataType: int64
+
+    column PlannedHours
+        dataType: decimal
+
+    column ActualHours
+        dataType: decimal
+        annotation SynonymList = Worked Hours, Labour Hours
+
+    column OvertimeHours
+        dataType: decimal
+
+    column LabourCost
+        dataType: decimal
+        formatString: £#,0.00
+
+    // === MEASURES ===
+
+    measure TotalLabourHours = SUM(fact_Labour[ActualHours])
+        formatString: #,0.0
+        annotation SynonymList = Total Hours, Worked Hours
+
+    measure TotalLabourCost = SUM(fact_Labour[LabourCost])
+        formatString: £#,0.00
+        annotation SynonymList = Wage Cost, Staff Cost
+
+    measure LabourCostPct = DIVIDE([TotalLabourCost], [TotalSales], 0)
+        formatString: 0.0%
+        annotation Description = Labour as % of sales
+        annotation SynonymList = Wage to Sales Ratio
+
+    measure SalesPerLabourHour = DIVIDE([TotalSales], [TotalLabourHours], 0)
+        formatString: £#,0.00
+        annotation SynonymList = SPLH, Productivity
+
+    measure LabourVariance = DIVIDE(SUM(fact_Labour[ActualHours]) - SUM(fact_Labour[PlannedHours]), SUM(fact_Labour[PlannedHours]), 0)
+        formatString: 0.0%
+        annotation Description = Actual vs planned hours variance
+
+    measure OvertimeRate = DIVIDE(SUM(fact_Labour[OvertimeHours]), [TotalLabourHours], 0)
+        formatString: 0.0%
+
+table fact_Waste
+    lineageTag: waste-001
+    description: Product waste and shrinkage
+    
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column ProductKey
+        dataType: int64
+
+    column WasteType
+        dataType: string
+        annotation AllowedValues = Expired, Damaged, Theft, Admin Error, Markdown
+        annotation SynonymList = Loss Type, Shrinkage Type
+
+    column WasteQty
+        dataType: int64
+
+    column WasteValue
+        dataType: decimal
+        formatString: £#,0.00
+        annotation SynonymList = Loss Value, Shrinkage Value
+
+    // === MEASURES ===
+
+    measure TotalWaste = SUM(fact_Waste[WasteValue])
+        formatString: £#,0.00
+        annotation SynonymList = Total Shrinkage, Total Loss
+
+    measure WasteRate = DIVIDE([TotalWaste], [TotalSales], 0)
+        formatString: 0.00%
+        annotation SynonymList = Shrinkage Rate, Loss Rate
+
+    measure FoodWaste = CALCULATE([TotalWaste], fact_Waste[WasteType] = "Expired")
+        formatString: £#,0.00
+        annotation SynonymList = Spoilage, Date Code Waste
+
+    measure TheftLoss = CALCULATE([TotalWaste], fact_Waste[WasteType] = "Theft")
+        formatString: £#,0.00
+        annotation SynonymList = External Shrinkage
+
+
+// DOMAIN: STORE OPERATIONS
+// Owner: Retail Operations Team
+// Refresh: Hourly for footfall, Daily for labour
+// ============================================================================
+
+model Store_Operations_Analytics
+    culture: en-GB
+    defaultPowerBIDataSourceVersion: powerBI_V3
+
+table dim_Date
+    lineageTag: shared-date-001
+
+table dim_Store
+    lineageTag: shared-store-001
+
+table fact_Footfall
+    lineageTag: foot-001
+    description: Store traffic counts by hour
+    
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column HourOfDay
+        dataType: int64
+
+    column FootfallCount
+        dataType: int64
+        annotation SynonymList = Visitors, Traffic, Customer Count
+
+    // === MEASURES ===
+
+    measure TotalFootfall = SUM(fact_Footfall[FootfallCount])
+        formatString: #,0
+        annotation SynonymList = Total Traffic, Total Visitors
+
+    measure ConversionRate = DIVIDE([TotalTransactions], [TotalFootfall], 0)
+        formatString: 0.0%
+        annotation Description = % visitors who purchased
+        annotation SynonymList = Browse to Buy, Conversion
+
+    measure SalesPerVisitor = DIVIDE([TotalSales], [TotalFootfall], 0)
+        formatString: £#,0.00
+
+    measure SalesPerSqFt = DIVIDE([TotalSales], SUM(dim_Store[SqFt_SalesFloor]), 0)
+        formatString: £#,0.00
+        annotation SynonymList = Sales Density, Productivity
+
+table fact_Labour
+    lineageTag: labour-001
+    description: Staff hours and productivity
+    
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column DepartmentKey
+        dataType: int64
+
+    column PlannedHours
+        dataType: decimal
+
+    column ActualHours
+        dataType: decimal
+        annotation SynonymList = Worked Hours, Labour Hours
+
+    column OvertimeHours
+        dataType: decimal
+
+    column LabourCost
+        dataType: decimal
+        formatString: £#,0.00
+
+    // === MEASURES ===
+
+    measure TotalLabourHours = SUM(fact_Labour[ActualHours])
+        formatString: #,0.0
+        annotation SynonymList = Total Hours, Worked Hours
+
+    measure TotalLabourCost = SUM(fact_Labour[LabourCost])
+        formatString: £#,0.00
+        annotation SynonymList = Wage Cost, Staff Cost
+
+    measure LabourCostPct = DIVIDE([TotalLabourCost], [TotalSales], 0)
+        formatString: 0.0%
+        annotation Description = Labour as % of sales
+        annotation SynonymList = Wage to Sales Ratio
+
+    measure SalesPerLabourHour = DIVIDE([TotalSales], [TotalLabourHours], 0)
+        formatString: £#,0.00
+        annotation SynonymList = SPLH, Productivity
+
+    measure LabourVariance = DIVIDE(SUM(fact_Labour[ActualHours]) - SUM(fact_Labour[PlannedHours]), SUM(fact_Labour[PlannedHours]), 0)
+        formatString: 0.0%
+        annotation Description = Actual vs planned hours variance
+
+    measure OvertimeRate = DIVIDE(SUM(fact_Labour[OvertimeHours]), [TotalLabourHours], 0)
+        formatString: 0.0%
+
+table fact_Waste
+    lineageTag: waste-001
+    description: Product waste and shrinkage
+    
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column ProductKey
+        dataType: int64
+
+    column WasteType
+        dataType: string
+        annotation AllowedValues = Expired, Damaged, Theft, Admin Error, Markdown
+        annotation SynonymList = Loss Type, Shrinkage Type
+
+    column WasteQty
+        dataType: int64
+
+    column WasteValue
+        dataType: decimal
+        formatString: £#,0.00
+        annotation SynonymList = Loss Value, Shrinkage Value
+
+    // === MEASURES ===
+
+    measure TotalWaste = SUM(fact_Waste[WasteValue])
+        formatString: £#,0.00
+        annotation SynonymList = Total Shrinkage, Total Loss
+
+    measure WasteRate = DIVIDE([TotalWaste], [TotalSales], 0)
+        formatString: 0.00%
+        annotation SynonymList = Shrinkage Rate, Loss Rate
+
+    measure FoodWaste = CALCULATE([TotalWaste], fact_Waste[WasteType] = "Expired")
+        formatString: £#,0.00
+        annotation SynonymList = Spoilage, Date Code Waste
+
+    measure TheftLoss = CALCULATE([TotalWaste], fact_Waste[WasteType] = "Theft")
+        formatString: £#,0.00
+        annotation SynonymList = External Shrinkage
+
+
+
+
+

@@ -1,0 +1,200 @@
+// ============================================================================
+// DOMAIN: SALES & REVENUE
+// Owner: Commercial Analytics Team
+// Refresh: Hourly during trading, Daily overnight full refresh
+// ============================================================================
+
+model Sales_Revenue_Analytics
+    culture: en-GB
+    defaultPowerBIDataSourceVersion: powerBI_V3
+
+table dim_Date
+    // Shared date dimension - references master
+    lineageTag: shared-date-001
+
+table dim_Store
+    // Shared store dimension - references master  
+    lineageTag: shared-store-001
+
+table dim_Product
+    // Shared product dimension - references master
+    lineageTag: shared-prod-001
+
+table fact_Sales
+    lineageTag: sales-001
+    description: POS transactions at line item level
+    
+    column TransactionID
+        dataType: string
+        annotation SynonymList = Basket ID, Receipt Number
+
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column ProductKey
+        dataType: int64
+
+    column CustomerKey
+        dataType: int64
+
+    column Quantity
+        dataType: int64
+        annotation SynonymList = Units, Items
+
+    column NetSales
+        dataType: decimal
+        formatString: £#,0.00
+        annotation SynonymList = Revenue, Sales Value
+
+    column GrossProfit
+        dataType: decimal
+        annotation SynonymList = Margin, GP
+
+    column DiscountAmount
+        dataType: decimal
+
+    column IsOnlineOrder
+        dataType: boolean
+        annotation SynonymList = Ecommerce, Digital
+
+    // === MEASURES ===
+    
+    measure TotalSales = SUM(fact_Sales[NetSales])
+        formatString: £#,0.00
+        annotation SynonymList = Total Revenue, Net Sales
+
+    measure TotalUnits = SUM(fact_Sales[Quantity])
+        formatString: #,0
+
+    measure TotalTransactions = DISTINCTCOUNT(fact_Sales[TransactionID])
+        formatString: #,0
+        annotation SynonymList = Basket Count
+
+    measure AvgBasketValue = DIVIDE([TotalSales], [TotalTransactions], 0)
+        formatString: £#,0.00
+        annotation SynonymList = ATV, Basket Size
+
+    measure GrossMarginPct = DIVIDE(SUM(fact_Sales[GrossProfit]), [TotalSales], 0)
+        formatString: 0.0%
+        annotation SynonymList = Margin %, GP%
+
+    measure LFLSales = CALCULATE([TotalSales], dim_Store[IsComparable] = TRUE)
+        formatString: £#,0.00
+        annotation SynonymList = Like-for-Like, Comp Sales
+
+    measure SalesLY = CALCULATE([TotalSales], SAMEPERIODLASTYEAR(dim_Date[Date]))
+        formatString: £#,0.00
+
+    measure SalesGrowthYoY = DIVIDE([TotalSales] - [SalesLY], [SalesLY], 0)
+        formatString: 0.0%
+        annotation SynonymList = YoY Growth
+
+    measure OnlineSalesMix = DIVIDE(CALCULATE([TotalSales], fact_Sales[IsOnlineOrder] = TRUE), [TotalSales], 0)
+        formatString: 0.0%
+        annotation SynonymList = Ecommerce Mix, Digital Penetration
+
+
+// DOMAIN: SALES & REVENUE
+// Owner: Commercial Analytics Team
+// Refresh: Hourly during trading, Daily overnight full refresh
+// ============================================================================
+
+model Sales_Revenue_Analytics
+    culture: en-GB
+    defaultPowerBIDataSourceVersion: powerBI_V3
+
+table dim_Date
+    // Shared date dimension - references master
+    lineageTag: shared-date-001
+
+table dim_Store
+    // Shared store dimension - references master  
+    lineageTag: shared-store-001
+
+table dim_Product
+    // Shared product dimension - references master
+    lineageTag: shared-prod-001
+
+table fact_Sales
+    lineageTag: sales-001
+    description: POS transactions at line item level
+    
+    column TransactionID
+        dataType: string
+        annotation SynonymList = Basket ID, Receipt Number
+
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column ProductKey
+        dataType: int64
+
+    column CustomerKey
+        dataType: int64
+
+    column Quantity
+        dataType: int64
+        annotation SynonymList = Units, Items
+
+    column NetSales
+        dataType: decimal
+        formatString: £#,0.00
+        annotation SynonymList = Revenue, Sales Value
+
+    column GrossProfit
+        dataType: decimal
+        annotation SynonymList = Margin, GP
+
+    column DiscountAmount
+        dataType: decimal
+
+    column IsOnlineOrder
+        dataType: boolean
+        annotation SynonymList = Ecommerce, Digital
+
+    // === MEASURES ===
+    
+    measure TotalSales = SUM(fact_Sales[NetSales])
+        formatString: £#,0.00
+        annotation SynonymList = Total Revenue, Net Sales
+
+    measure TotalUnits = SUM(fact_Sales[Quantity])
+        formatString: #,0
+
+    measure TotalTransactions = DISTINCTCOUNT(fact_Sales[TransactionID])
+        formatString: #,0
+        annotation SynonymList = Basket Count
+
+    measure AvgBasketValue = DIVIDE([TotalSales], [TotalTransactions], 0)
+        formatString: £#,0.00
+        annotation SynonymList = ATV, Basket Size
+
+    measure GrossMarginPct = DIVIDE(SUM(fact_Sales[GrossProfit]), [TotalSales], 0)
+        formatString: 0.0%
+        annotation SynonymList = Margin %, GP%
+
+    measure LFLSales = CALCULATE([TotalSales], dim_Store[IsComparable] = TRUE)
+        formatString: £#,0.00
+        annotation SynonymList = Like-for-Like, Comp Sales
+
+    measure SalesLY = CALCULATE([TotalSales], SAMEPERIODLASTYEAR(dim_Date[Date]))
+        formatString: £#,0.00
+
+    measure SalesGrowthYoY = DIVIDE([TotalSales] - [SalesLY], [SalesLY], 0)
+        formatString: 0.0%
+        annotation SynonymList = YoY Growth
+
+    measure OnlineSalesMix = DIVIDE(CALCULATE([TotalSales], fact_Sales[IsOnlineOrder] = TRUE), [TotalSales], 0)
+        formatString: 0.0%
+        annotation SynonymList = Ecommerce Mix, Digital Penetration
+
+
+
+
+

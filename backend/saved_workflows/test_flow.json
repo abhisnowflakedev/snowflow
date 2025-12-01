@@ -1,0 +1,73 @@
+{
+  "name": "test flow",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "snowflakeSource",
+      "position": {
+        "x": 50,
+        "y": 120
+      },
+      "data": {
+        "label": "SALES_DATA",
+        "database": "SNOWFLOW_DEV",
+        "schema": "DEMO",
+        "objectType": "table"
+      },
+      "width": 240,
+      "height": 121
+    },
+    {
+      "id": "2",
+      "type": "agent",
+      "position": {
+        "x": 580,
+        "y": 120
+      },
+      "data": {
+        "label": "Sales Analyst",
+        "type": "analyst",
+        "model": "mistral-large2",
+        "instructions": "Analyze the sales data. What are the top selling products? Which regions perform best?"
+      },
+      "width": 240,
+      "height": 111
+    },
+    {
+      "id": "3",
+      "type": "output",
+      "position": {
+        "x": 870,
+        "y": 120
+      },
+      "data": {
+        "label": "Results",
+        "outputType": "display"
+      },
+      "width": 150,
+      "height": 125
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1-2",
+      "source": "1",
+      "target": "2",
+      "animated": true,
+      "style": {
+        "stroke": "#29B5E8"
+      }
+    },
+    {
+      "id": "e2-3",
+      "source": "2",
+      "target": "3",
+      "animated": true,
+      "style": {
+        "stroke": "#8B5CF6"
+      }
+    }
+  ],
+  "created_at": "2025-11-28T13:18:38.594475",
+  "updated_at": "2025-11-28T13:18:38.594836"
+}

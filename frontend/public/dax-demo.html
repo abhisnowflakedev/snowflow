@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DAX → SQL Translator | SnowFlow</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', monospace;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 40px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .header h1 {
+      font-size: 2rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .header p { color: #888; font-size: 14px; }
+    .card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 16px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      outline: none;
+    }
+    textarea:focus { border-color: #667eea; }
+    .arrow {
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+      font-size: 24px;
+      color: #667eea;
+    }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge.high { background: rgba(34,197,94,0.2); color: #22c55e; }
+    .badge.medium { background: rgba(245,158,11,0.2); color: #f59e0b; }
+    .badge.low { background: rgba(239,68,68,0.2); color: #ef4444; }
+    .sql-output {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 80px;
+      font-size: 14px;
+    }
+    .sql-output.success { color: #22c55e; }
+    .sql-output.error { color: #ef4444; }
+    .sql-output.empty { color: #666; font-style: italic; }
+    .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .meta-tag {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+    .meta-tag.tables { background: rgba(102,126,234,0.2); color: #667eea; }
+    .meta-tag.patterns { background: rgba(34,197,94,0.2); color: #22c55e; }
+    .samples { margin-top: 16px; }
+    .samples span { color: #666; font-size: 12px; }
+    .sample-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: #888;
+      cursor: pointer;
+      margin: 4px;
+      font-family: inherit;
+    }
+    .sample-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .copy-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: #888;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,0.1); }
+    .copy-btn.copied { background: rgba(34,197,94,0.2); color: #22c55e; border-color: #22c55e; }
+    .loading { animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .stat {
+      background: rgba(0,0,0,0.3);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-value { font-size: 24px; font-weight: 700; color: #667eea; }
+    .stat-label { font-size: 11px; color: #666; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚡ DAX → SQL Translator</h1>
+      <p>Real-time Power BI DAX to Snowflake SQL translation</p>
+    </div>
+
+    <div class="card">
+      <label>📝 DAX Expression</label>
+      <textarea id="daxInput" placeholder="Enter DAX expression... e.g., SUM(Sales[Amount])"></textarea>
+      <div class="samples">
+        <span>Try:</span>
+        <button class="sample-btn" onclick="setDax('SUM(Sales[Amount])')">SUM</button>
+        <button class="sample-btn" onclick="setDax('AVERAGE(Sales[Quantity])')">AVERAGE</button>
+        <button class="sample-btn" onclick="setDax('IF(Sales[Amount] > 1000, \"High\", \"Low\")')">IF</button>
+        <button class="sample-btn" onclick="setDax('DIVIDE(SUM(Sales[Revenue]), SUM(Sales[Quantity]), 0)')">DIVIDE</button>
+        <button class="sample-btn" onclick="setDax('CALCULATE(SUM(Sales[Amount]), Sales[Region] = \"West\")')">CALCULATE</button>
+        <button class="sample-btn" onclick="setDax('SAMEPERIODLASTYEAR(Date[Date])')">Time Intel</button>
+        <button class="sample-btn" onclick="setDax('DISTINCTCOUNT(Sales[CustomerID])')">DISTINCTCOUNT</button>
+      </div>
+    </div>
+
+    <div class="arrow" id="arrow">↓</div>
+
+    <div class="card">
+      <div class="result-header">
+        <label>🗃️ Snowflake SQL</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span id="confidence" class="badge" style="display: none;"></span>
+          <button id="copyBtn" class="copy-btn" onclick="copySQL()" style="display: none;">📋 Copy</button>
+        </div>
+      </div>
+      <div id="sqlOutput" class="sql-output empty">SQL will appear here...</div>
+      <div id="meta" class="meta"></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="patternCount">51</div>
+        <div class="stat-label">Patterns Available</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="translationCount">0</div>
+        <div class="stat-label">Translations</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="successRate">-</div>
+        <div class="stat-label">Success Rate</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:8000/api/translate';
+    let debounceTimer;
+    let translations = 0;
+    let successes = 0;
+    let currentSQL = '';
+
+    const daxInput = document.getElementById('daxInput');
+    const sqlOutput = document.getElementById('sqlOutput');
+    const confidence = document.getElementById('confidence');
+    const copyBtn = document.getElementById('copyBtn');
+    const meta = document.getElementById('meta');
+    const arrow = document.getElementById('arrow');
+
+    daxInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      if (!daxInput.value.trim()) {
+        reset();
+        return;
+      }
+      arrow.innerHTML = '⏳';
+      arrow.classList.add('loading');
+      debounceTimer = setTimeout(() => translate(daxInput.value), 500);
+    });
+
+    async function translate(dax) {
+      try {
+        const res = await fetch(`${API}/expression`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dax })
+        });
+        const data = await res.json();
+        translations++;
+        
+        arrow.innerHTML = '↓';
+        arrow.classList.remove('loading');
+        
+        if (data.success) {
+          successes++;
+          currentSQL = data.sql;
+          sqlOutput.textContent = data.sql;
+          sqlOutput.className = 'sql-output success';
+          
+          confidence.textContent = data.confidence;
+          confidence.className = `badge ${data.confidence.toLowerCase()}`;
+          confidence.style.display = 'inline-flex';
+          copyBtn.style.display = 'block';
+          
+          let metaHTML = '';
+          if (data.tables_used?.length) {
+            metaHTML += `<span class="meta-tag tables">Tables: ${data.tables_used.join(', ')}</span>`;
+          }
+          if (data.patterns_applied?.length) {
+            metaHTML += `<span class="meta-tag patterns">Patterns: ${data.patterns_applied.join(', ')}</span>`;
+          }
+          meta.innerHTML = metaHTML;
+        } else {
+          sqlOutput.textContent = data.errors?.join(', ') || 'Translation failed';
+          sqlOutput.className = 'sql-output error';
+          confidence.style.display = 'none';
+          copyBtn.style.display = 'none';
+          meta.innerHTML = '';
+        }
+        
+        updateStats();
+      } catch (err) {
+        arrow.innerHTML = '❌';
+        arrow.classList.remove('loading');
+        sqlOutput.textContent = 'API error: ' + err.message;
+        sqlOutput.className = 'sql-output error';
+      }
+    }
+
+    function reset() {
+      sqlOutput.textContent = 'SQL will appear here...';
+      sqlOutput.className = 'sql-output empty';
+      confidence.style.display = 'none';
+      copyBtn.style.display = 'none';
+      meta.innerHTML = '';
+      arrow.innerHTML = '↓';
+      arrow.classList.remove('loading');
+    }
+
+    function setDax(expr) {
+      daxInput.value = expr;
+      daxInput.dispatchEvent(new Event('input'));
+    }
+
+    function copySQL() {
+      navigator.clipboard.writeText(currentSQL);
+      copyBtn.textContent = '✓ Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = '📋 Copy';
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    }
+
+    function updateStats() {
+      document.getElementById('translationCount').textContent = translations;
+      document.getElementById('successRate').textContent = 
+        translations > 0 ? Math.round(successes / translations * 100) + '%' : '-';
+    }
+
+    // Load pattern count
+    fetch(`${API}/patterns`)
+      .then(r => r.json())
+      .then(d => document.getElementById('patternCount').textContent = d.total)
+      .catch(() => {});
+  </script>
+</body>
+</html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DAX → SQL Translator | SnowFlow</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', monospace;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 40px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .header h1 {
+      font-size: 2rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .header p { color: #888; font-size: 14px; }
+    .card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 16px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      outline: none;
+    }
+    textarea:focus { border-color: #667eea; }
+    .arrow {
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+      font-size: 24px;
+      color: #667eea;
+    }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge.high { background: rgba(34,197,94,0.2); color: #22c55e; }
+    .badge.medium { background: rgba(245,158,11,0.2); color: #f59e0b; }
+    .badge.low { background: rgba(239,68,68,0.2); color: #ef4444; }
+    .sql-output {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 80px;
+      font-size: 14px;
+    }
+    .sql-output.success { color: #22c55e; }
+    .sql-output.error { color: #ef4444; }
+    .sql-output.empty { color: #666; font-style: italic; }
+    .meta { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .meta-tag {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+    .meta-tag.tables { background: rgba(102,126,234,0.2); color: #667eea; }
+    .meta-tag.patterns { background: rgba(34,197,94,0.2); color: #22c55e; }
+    .samples { margin-top: 16px; }
+    .samples span { color: #666; font-size: 12px; }
+    .sample-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: #888;
+      cursor: pointer;
+      margin: 4px;
+      font-family: inherit;
+    }
+    .sample-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .copy-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: #888;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,0.1); }
+    .copy-btn.copied { background: rgba(34,197,94,0.2); color: #22c55e; border-color: #22c55e; }
+    .loading { animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .stat {
+      background: rgba(0,0,0,0.3);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-value { font-size: 24px; font-weight: 700; color: #667eea; }
+    .stat-label { font-size: 11px; color: #666; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚡ DAX → SQL Translator</h1>
+      <p>Real-time Power BI DAX to Snowflake SQL translation</p>
+    </div>
+
+    <div class="card">
+      <label>📝 DAX Expression</label>
+      <textarea id="daxInput" placeholder="Enter DAX expression... e.g., SUM(Sales[Amount])"></textarea>
+      <div class="samples">
+        <span>Try:</span>
+        <button class="sample-btn" onclick="setDax('SUM(Sales[Amount])')">SUM</button>
+        <button class="sample-btn" onclick="setDax('AVERAGE(Sales[Quantity])')">AVERAGE</button>
+        <button class="sample-btn" onclick="setDax('IF(Sales[Amount] > 1000, \"High\", \"Low\")')">IF</button>
+        <button class="sample-btn" onclick="setDax('DIVIDE(SUM(Sales[Revenue]), SUM(Sales[Quantity]), 0)')">DIVIDE</button>
+        <button class="sample-btn" onclick="setDax('CALCULATE(SUM(Sales[Amount]), Sales[Region] = \"West\")')">CALCULATE</button>
+        <button class="sample-btn" onclick="setDax('SAMEPERIODLASTYEAR(Date[Date])')">Time Intel</button>
+        <button class="sample-btn" onclick="setDax('DISTINCTCOUNT(Sales[CustomerID])')">DISTINCTCOUNT</button>
+      </div>
+    </div>
+
+    <div class="arrow" id="arrow">↓</div>
+
+    <div class="card">
+      <div class="result-header">
+        <label>🗃️ Snowflake SQL</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span id="confidence" class="badge" style="display: none;"></span>
+          <button id="copyBtn" class="copy-btn" onclick="copySQL()" style="display: none;">📋 Copy</button>
+        </div>
+      </div>
+      <div id="sqlOutput" class="sql-output empty">SQL will appear here...</div>
+      <div id="meta" class="meta"></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="patternCount">51</div>
+        <div class="stat-label">Patterns Available</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="translationCount">0</div>
+        <div class="stat-label">Translations</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="successRate">-</div>
+        <div class="stat-label">Success Rate</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:8000/api/translate';
+    let debounceTimer;
+    let translations = 0;
+    let successes = 0;
+    let currentSQL = '';
+
+    const daxInput = document.getElementById('daxInput');
+    const sqlOutput = document.getElementById('sqlOutput');
+    const confidence = document.getElementById('confidence');
+    const copyBtn = document.getElementById('copyBtn');
+    const meta = document.getElementById('meta');
+    const arrow = document.getElementById('arrow');
+
+    daxInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      if (!daxInput.value.trim()) {
+        reset();
+        return;
+      }
+      arrow.innerHTML = '⏳';
+      arrow.classList.add('loading');
+      debounceTimer = setTimeout(() => translate(daxInput.value), 500);
+    });
+
+    async function translate(dax) {
+      try {
+        const res = await fetch(`${API}/expression`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dax })
+        });
+        const data = await res.json();
+        translations++;
+        
+        arrow.innerHTML = '↓';
+        arrow.classList.remove('loading');
+        
+        if (data.success) {
+          successes++;
+          currentSQL = data.sql;
+          sqlOutput.textContent = data.sql;
+          sqlOutput.className = 'sql-output success';
+          
+          confidence.textContent = data.confidence;
+          confidence.className = `badge ${data.confidence.toLowerCase()}`;
+          confidence.style.display = 'inline-flex';
+          copyBtn.style.display = 'block';
+          
+          let metaHTML = '';
+          if (data.tables_used?.length) {
+            metaHTML += `<span class="meta-tag tables">Tables: ${data.tables_used.join(', ')}</span>`;
+          }
+          if (data.patterns_applied?.length) {
+            metaHTML += `<span class="meta-tag patterns">Patterns: ${data.patterns_applied.join(', ')}</span>`;
+          }
+          meta.innerHTML = metaHTML;
+        } else {
+          sqlOutput.textContent = data.errors?.join(', ') || 'Translation failed';
+          sqlOutput.className = 'sql-output error';
+          confidence.style.display = 'none';
+          copyBtn.style.display = 'none';
+          meta.innerHTML = '';
+        }
+        
+        updateStats();
+      } catch (err) {
+        arrow.innerHTML = '❌';
+        arrow.classList.remove('loading');
+        sqlOutput.textContent = 'API error: ' + err.message;
+        sqlOutput.className = 'sql-output error';
+      }
+    }
+
+    function reset() {
+      sqlOutput.textContent = 'SQL will appear here...';
+      sqlOutput.className = 'sql-output empty';
+      confidence.style.display = 'none';
+      copyBtn.style.display = 'none';
+      meta.innerHTML = '';
+      arrow.innerHTML = '↓';
+      arrow.classList.remove('loading');
+    }
+
+    function setDax(expr) {
+      daxInput.value = expr;
+      daxInput.dispatchEvent(new Event('input'));
+    }
+
+    function copySQL() {
+      navigator.clipboard.writeText(currentSQL);
+      copyBtn.textContent = '✓ Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = '📋 Copy';
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    }
+
+    function updateStats() {
+      document.getElementById('translationCount').textContent = translations;
+      document.getElementById('successRate').textContent = 
+        translations > 0 ? Math.round(successes / translations * 100) + '%' : '-';
+    }
+
+    // Load pattern count
+    fetch(`${API}/patterns`)
+      .then(r => r.json())
+      .then(d => document.getElementById('patternCount').textContent = d.total)
+      .catch(() => {});
+  </script>
+</body>
+</html>
+
+
+
+

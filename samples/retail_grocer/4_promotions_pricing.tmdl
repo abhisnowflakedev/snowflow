@@ -1,0 +1,322 @@
+// ============================================================================
+// DOMAIN: PROMOTIONS & PRICING
+// Owner: Trading & Commercial Team
+// Refresh: Daily, Intraday during key promotional periods
+// ============================================================================
+
+model Promotions_Pricing_Analytics
+    culture: en-GB
+    defaultPowerBIDataSourceVersion: powerBI_V3
+
+table dim_Date
+    lineageTag: shared-date-001
+
+table dim_Store
+    lineageTag: shared-store-001
+
+table dim_Product
+    lineageTag: shared-prod-001
+
+table dim_Promotion
+    lineageTag: promo-001
+    description: Promotion/offer master
+    
+    column PromotionKey
+        dataType: int64
+        isKey: true
+
+    column PromotionCode
+        dataType: string
+        annotation SynonymList = Offer Code, Deal Code
+
+    column PromotionName
+        dataType: string
+        annotation SynonymList = Offer Name
+
+    column PromotionType
+        dataType: string
+        annotation AllowedValues = BOGOF, Multibuy, Price Cut, Meal Deal, Clubcard Price, Coupon
+        annotation SynonymList = Mechanic Type
+
+    column PromotionMechanic
+        dataType: string
+        annotation Description = e.g. "3 for £5", "50% off", "Buy 2 Get 1 Free"
+
+    column StartDate
+        dataType: dateTime
+
+    column EndDate
+        dataType: dateTime
+
+    column FundedBy
+        dataType: string
+        annotation AllowedValues = Retailer, Supplier, Joint
+
+    column DisplayLocation
+        dataType: string
+        annotation AllowedValues = Gondola End, Checkout, Front of Store, In-Aisle
+
+    column IsClubcardExclusive
+        dataType: boolean
+        annotation SynonymList = Loyalty Exclusive
+
+table fact_PromoSales
+    lineageTag: promo-sales-001
+    description: Promotional sales performance
+    
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column ProductKey
+        dataType: int64
+
+    column PromotionKey
+        dataType: int64
+
+    column PromoSalesValue
+        dataType: decimal
+        formatString: £#,0.00
+
+    column PromoUnits
+        dataType: int64
+
+    column DiscountGiven
+        dataType: decimal
+        formatString: £#,0.00
+        annotation SynonymList = Promo Cost, Discount Amount
+
+    column BaselineSales
+        dataType: decimal
+        formatString: £#,0.00
+        annotation Description = Expected sales without promotion
+
+    column IncrementalSales
+        dataType: decimal
+        formatString: £#,0.00
+        annotation Description = Additional sales due to promotion
+
+    // === MEASURES ===
+
+    measure TotalPromoSales = SUM(fact_PromoSales[PromoSalesValue])
+        formatString: £#,0.00
+        annotation SynonymList = Promotional Revenue
+
+    measure TotalDiscountGiven = SUM(fact_PromoSales[DiscountGiven])
+        formatString: £#,0.00
+        annotation SynonymList = Promo Investment, Discount Cost
+
+    measure PromoSalesMix = DIVIDE([TotalPromoSales], [TotalSales], 0)
+        formatString: 0.0%
+        annotation Description = % of sales on promotion
+        annotation SynonymList = Deal Rate, Promo Penetration
+
+    measure IncrementalSalesValue = SUM(fact_PromoSales[IncrementalSales])
+        formatString: £#,0.00
+        annotation SynonymList = Promo Uplift Value
+
+    measure PromoLift = DIVIDE([IncrementalSalesValue], SUM(fact_PromoSales[BaselineSales]), 0)
+        formatString: 0.0%
+        annotation Description = % sales uplift from promotion
+        annotation SynonymList = Uplift, Lift
+
+    measure PromoROI = DIVIDE([IncrementalSalesValue] - [TotalDiscountGiven], [TotalDiscountGiven], 0)
+        formatString: 0.0%
+        annotation Description = Return on promotional investment
+        annotation SynonymList = Promo Effectiveness
+
+    measure AvgDiscountDepth = DIVIDE([TotalDiscountGiven], [TotalPromoSales] + [TotalDiscountGiven], 0)
+        formatString: 0.0%
+        annotation Description = Average % discount given
+        annotation SynonymList = Discount Rate, Markdown Depth
+
+table fact_PriceChanges
+    lineageTag: price-001
+    description: Price change history
+    
+    column EffectiveDate
+        dataType: dateTime
+
+    column ProductKey
+        dataType: int64
+
+    column OldPrice
+        dataType: decimal
+
+    column NewPrice
+        dataType: decimal
+
+    column PriceChangeReason
+        dataType: string
+        annotation AllowedValues = Cost Increase, Competitive Match, Promotional, Reset, KVI Adjustment
+
+    column IsKVI
+        dataType: boolean
+        annotation Description = Known Value Item - price sensitive product
+        annotation SynonymList = Price Sensitive, Traffic Driver
+
+
+// DOMAIN: PROMOTIONS & PRICING
+// Owner: Trading & Commercial Team
+// Refresh: Daily, Intraday during key promotional periods
+// ============================================================================
+
+model Promotions_Pricing_Analytics
+    culture: en-GB
+    defaultPowerBIDataSourceVersion: powerBI_V3
+
+table dim_Date
+    lineageTag: shared-date-001
+
+table dim_Store
+    lineageTag: shared-store-001
+
+table dim_Product
+    lineageTag: shared-prod-001
+
+table dim_Promotion
+    lineageTag: promo-001
+    description: Promotion/offer master
+    
+    column PromotionKey
+        dataType: int64
+        isKey: true
+
+    column PromotionCode
+        dataType: string
+        annotation SynonymList = Offer Code, Deal Code
+
+    column PromotionName
+        dataType: string
+        annotation SynonymList = Offer Name
+
+    column PromotionType
+        dataType: string
+        annotation AllowedValues = BOGOF, Multibuy, Price Cut, Meal Deal, Clubcard Price, Coupon
+        annotation SynonymList = Mechanic Type
+
+    column PromotionMechanic
+        dataType: string
+        annotation Description = e.g. "3 for £5", "50% off", "Buy 2 Get 1 Free"
+
+    column StartDate
+        dataType: dateTime
+
+    column EndDate
+        dataType: dateTime
+
+    column FundedBy
+        dataType: string
+        annotation AllowedValues = Retailer, Supplier, Joint
+
+    column DisplayLocation
+        dataType: string
+        annotation AllowedValues = Gondola End, Checkout, Front of Store, In-Aisle
+
+    column IsClubcardExclusive
+        dataType: boolean
+        annotation SynonymList = Loyalty Exclusive
+
+table fact_PromoSales
+    lineageTag: promo-sales-001
+    description: Promotional sales performance
+    
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column ProductKey
+        dataType: int64
+
+    column PromotionKey
+        dataType: int64
+
+    column PromoSalesValue
+        dataType: decimal
+        formatString: £#,0.00
+
+    column PromoUnits
+        dataType: int64
+
+    column DiscountGiven
+        dataType: decimal
+        formatString: £#,0.00
+        annotation SynonymList = Promo Cost, Discount Amount
+
+    column BaselineSales
+        dataType: decimal
+        formatString: £#,0.00
+        annotation Description = Expected sales without promotion
+
+    column IncrementalSales
+        dataType: decimal
+        formatString: £#,0.00
+        annotation Description = Additional sales due to promotion
+
+    // === MEASURES ===
+
+    measure TotalPromoSales = SUM(fact_PromoSales[PromoSalesValue])
+        formatString: £#,0.00
+        annotation SynonymList = Promotional Revenue
+
+    measure TotalDiscountGiven = SUM(fact_PromoSales[DiscountGiven])
+        formatString: £#,0.00
+        annotation SynonymList = Promo Investment, Discount Cost
+
+    measure PromoSalesMix = DIVIDE([TotalPromoSales], [TotalSales], 0)
+        formatString: 0.0%
+        annotation Description = % of sales on promotion
+        annotation SynonymList = Deal Rate, Promo Penetration
+
+    measure IncrementalSalesValue = SUM(fact_PromoSales[IncrementalSales])
+        formatString: £#,0.00
+        annotation SynonymList = Promo Uplift Value
+
+    measure PromoLift = DIVIDE([IncrementalSalesValue], SUM(fact_PromoSales[BaselineSales]), 0)
+        formatString: 0.0%
+        annotation Description = % sales uplift from promotion
+        annotation SynonymList = Uplift, Lift
+
+    measure PromoROI = DIVIDE([IncrementalSalesValue] - [TotalDiscountGiven], [TotalDiscountGiven], 0)
+        formatString: 0.0%
+        annotation Description = Return on promotional investment
+        annotation SynonymList = Promo Effectiveness
+
+    measure AvgDiscountDepth = DIVIDE([TotalDiscountGiven], [TotalPromoSales] + [TotalDiscountGiven], 0)
+        formatString: 0.0%
+        annotation Description = Average % discount given
+        annotation SynonymList = Discount Rate, Markdown Depth
+
+table fact_PriceChanges
+    lineageTag: price-001
+    description: Price change history
+    
+    column EffectiveDate
+        dataType: dateTime
+
+    column ProductKey
+        dataType: int64
+
+    column OldPrice
+        dataType: decimal
+
+    column NewPrice
+        dataType: decimal
+
+    column PriceChangeReason
+        dataType: string
+        annotation AllowedValues = Cost Increase, Competitive Match, Promotional, Reset, KVI Adjustment
+
+    column IsKVI
+        dataType: boolean
+        annotation Description = Known Value Item - price sensitive product
+        annotation SynonymList = Price Sensitive, Traffic Driver
+
+
+
+
+

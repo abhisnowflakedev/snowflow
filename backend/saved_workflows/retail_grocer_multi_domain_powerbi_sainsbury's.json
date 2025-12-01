@@ -1,0 +1,714 @@
+{
+  "name": "Retail Grocer Multi Domain PowerBI Sainsbury's",
+  "nodes": [
+    {
+      "id": "pbi-copilot",
+      "type": "externalAgent",
+      "position": {
+        "x": 1069.0248227565316,
+        "y": -264.57394968642143
+      },
+      "data": {
+        "label": "\ud83d\udfe6 Power BI Copilot",
+        "agentType": "copilot",
+        "endpoint": "https://api.powerbi.com/v1.0/myorg/copilot",
+        "method": "POST",
+        "authType": "oauth",
+        "provider": "Microsoft",
+        "systemPrompt": "User entry point. Receives: \"Why did margin drop in Scotland?\""
+      },
+      "width": 240,
+      "height": 177,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1069.0248227565316,
+        "y": -264.57394968642143
+      },
+      "dragging": false
+    },
+    {
+      "id": "tmdl-sales",
+      "type": "snowflakeSource",
+      "position": {
+        "x": -83.24968461771101,
+        "y": -258.37513071242654
+      },
+      "data": {
+        "label": "\ud83d\udcca Sales TMDL",
+        "objectType": "view",
+        "database": "FABRIC",
+        "schema": "SEMANTIC_MODELS"
+      },
+      "width": 240,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -83.24968461771101,
+        "y": -258.37513071242654
+      },
+      "dragging": false
+    },
+    {
+      "id": "tmdl-inventory",
+      "type": "snowflakeSource",
+      "position": {
+        "x": -78.5662918050823,
+        "y": -130.2747738366541
+      },
+      "data": {
+        "label": "\ud83d\udce6 Inventory TMDL",
+        "objectType": "view",
+        "database": "FABRIC",
+        "schema": "SEMANTIC_MODELS"
+      },
+      "width": 240,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -78.5662918050823,
+        "y": -130.2747738366541
+      },
+      "dragging": false
+    },
+    {
+      "id": "tmdl-customer",
+      "type": "snowflakeSource",
+      "position": {
+        "x": -77.39544360192508,
+        "y": -4.5161133671960485
+      },
+      "data": {
+        "label": "\ud83d\udc65 Customer TMDL",
+        "objectType": "view",
+        "database": "FABRIC",
+        "schema": "SEMANTIC_MODELS"
+      },
+      "width": 240,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -77.39544360192508,
+        "y": -4.5161133671960485
+      },
+      "dragging": false
+    },
+    {
+      "id": "tmdl-promo",
+      "type": "snowflakeSource",
+      "position": {
+        "x": -77.39544360192508,
+        "y": 122.41339530541924
+      },
+      "data": {
+        "label": "\ud83c\udff7\ufe0f Promo TMDL",
+        "objectType": "view",
+        "database": "FABRIC",
+        "schema": "SEMANTIC_MODELS"
+      },
+      "width": 240,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -77.39544360192508,
+        "y": 122.41339530541924
+      },
+      "dragging": false
+    },
+    {
+      "id": "tmdl-ops",
+      "type": "snowflakeSource",
+      "position": {
+        "x": -77.39544360192508,
+        "y": 245.83035936856294
+      },
+      "data": {
+        "label": "\ud83c\udfea Ops TMDL",
+        "objectType": "view",
+        "database": "FABRIC",
+        "schema": "SEMANTIC_MODELS"
+      },
+      "width": 240,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -77.39544360192508,
+        "y": 245.83035936856294
+      },
+      "dragging": false
+    },
+    {
+      "id": "ms-fabric-agent",
+      "type": "externalAgent",
+      "position": {
+        "x": 1438.071565148792,
+        "y": -75.21001413055822
+      },
+      "data": {
+        "label": "\ud83d\udfe6 MS Fabric Agent",
+        "agentType": "custom",
+        "endpoint": "https://api.fabric.microsoft.com/v1/agent",
+        "method": "POST",
+        "authType": "oauth",
+        "provider": "Microsoft",
+        "systemPrompt": "MS Fabric orchestrator. Handoff complex queries to Snowflake."
+      },
+      "width": 240,
+      "height": 177,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1438.071565148792,
+        "y": -75.21001413055822
+      },
+      "dragging": false
+    },
+    {
+      "id": "gateway",
+      "type": "condition",
+      "position": {
+        "x": 899.7959954762712,
+        "y": 269.6333601508152
+      },
+      "data": {
+        "label": "\ud83d\udd04 Agent Gateway",
+        "condition": "Cross-platform handoff",
+        "description": "Security checkpoint"
+      },
+      "width": 200,
+      "height": 105,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 899.7959954762712,
+        "y": 269.6333601508152
+      },
+      "dragging": false
+    },
+    {
+      "id": "src-sales",
+      "type": "snowflakeSource",
+      "position": {
+        "x": -578.5566743972698,
+        "y": -252.90321188195202
+      },
+      "data": {
+        "label": "SALES_TRANSACTIONS",
+        "database": "SNOWFLOW_DEV",
+        "schema": "RETAIL_DEMO",
+        "objectType": "table"
+      },
+      "width": 240,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -578.5566743972698,
+        "y": -252.90321188195202
+      },
+      "dragging": false
+    },
+    {
+      "id": "src-inventory",
+      "type": "snowflakeSource",
+      "position": {
+        "x": -576.7860569169696,
+        "y": -126.45160594097601
+      },
+      "data": {
+        "label": "INVENTORY",
+        "database": "SNOWFLOW_DEV",
+        "schema": "RETAIL_DEMO",
+        "objectType": "table"
+      },
+      "width": 240,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -576.7860569169696,
+        "y": -126.45160594097601
+      },
+      "dragging": false
+    },
+    {
+      "id": "src-ops",
+      "type": "snowflakeSource",
+      "position": {
+        "x": -575.4837787179321,
+        "y": 0
+      },
+      "data": {
+        "label": "STORE_OPERATIONS",
+        "database": "SNOWFLOW_DEV",
+        "schema": "RETAIL_DEMO",
+        "objectType": "table"
+      },
+      "width": 240,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -575.4837787179321,
+        "y": 0
+      },
+      "dragging": false
+    },
+    {
+      "id": "supervisor-retail",
+      "type": "supervisor",
+      "position": {
+        "x": 900.6202649424968,
+        "y": 384.8569076769176
+      },
+      "data": {
+        "label": "\ud83e\udde0 Retail Supervisor",
+        "model": "mistral-large2",
+        "delegationStrategy": "adaptive",
+        "systemPrompt": "Head of Analytics for UK grocery retailer. Data available: SALES_TRANSACTIONS, INVENTORY, STORE_OPERATIONS, CUSTOMER_LOYALTY, PROMOTIONS in SNOWFLOW_DEV.RETAIL_DEMO. Scotland shows lower margins due to heavy promos, waste, and overtime. PLAN which agents needed, DISPATCH to them, AGGREGATE results.",
+        "aggregationMethod": "synthesize"
+      },
+      "width": 200,
+      "height": 127,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 900.6202649424968,
+        "y": 384.8569076769176
+      },
+      "dragging": false
+    },
+    {
+      "id": "agent-sales",
+      "type": "agent",
+      "position": {
+        "x": 1445.06693498475,
+        "y": 148.84544443433984
+      },
+      "data": {
+        "label": "\ud83d\udcb0 Sales Agent",
+        "model": "mistral-large2",
+        "systemPrompt": "Sales analyst for UK grocery retailer. Query SNOWFLOW_DEV.RETAIL_DEMO.SALES_TRANSACTIONS. Analyze revenue, margins, regional performance. Scotland has avg 15% margin vs England 30%. Heavy promo activity in Scotland.",
+        "tools": {
+          "analyst": {
+            "enabled": true
+          },
+          "sqlExecutor": {
+            "enabled": true
+          }
+        }
+      },
+      "width": 240,
+      "height": 186,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1445.06693498475,
+        "y": 148.84544443433984
+      },
+      "dragging": false
+    },
+    {
+      "id": "agent-inventory",
+      "type": "agent",
+      "position": {
+        "x": 1444.4466700422536,
+        "y": 339.9332632243895
+      },
+      "data": {
+        "label": "\ud83d\udce6 Inventory Agent",
+        "model": "mistral-large2",
+        "systemPrompt": "Supply chain analyst. Query SNOWFLOW_DEV.RETAIL_DEMO.INVENTORY. Scotland has high waste (25 units strawberries, 12 units milk) vs England (5, 3). Days of supply lower in Scotland.",
+        "tools": {
+          "analyst": {
+            "enabled": true
+          },
+          "sqlExecutor": {
+            "enabled": true
+          }
+        }
+      },
+      "width": 240,
+      "height": 186,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1444.4466700422536,
+        "y": 339.9332632243895
+      },
+      "dragging": false
+    },
+    {
+      "id": "agent-ops",
+      "type": "agent",
+      "position": {
+        "x": 1448.5432851706726,
+        "y": 919.7086405955883
+      },
+      "data": {
+        "label": "\ud83c\udfea Ops Agent",
+        "model": "mistral-large2",
+        "systemPrompt": "Store operations analyst. Query SNOWFLOW_DEV.RETAIL_DEMO.STORE_OPERATIONS. Scotland stores have 45-52 overtime hours vs England 10-15. Higher waste and labour costs in Scotland.",
+        "tools": {
+          "analyst": {
+            "enabled": true
+          },
+          "sqlExecutor": {
+            "enabled": true
+          }
+        }
+      },
+      "width": 240,
+      "height": 186,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1448.5432851706726,
+        "y": 919.7086405955883
+      },
+      "dragging": false
+    },
+    {
+      "id": "agent-promo",
+      "type": "agent",
+      "position": {
+        "x": 1449.303577719171,
+        "y": 716.1928324439659
+      },
+      "data": {
+        "label": "\ud83c\udff7\ufe0f Promo Agent",
+        "model": "mistral-large2",
+        "systemPrompt": "Trading analyst. Query SNOWFLOW_DEV.RETAIL_DEMO.PROMOTIONS. Scotland Autumn Sale has 25% discount, overspent budget (\u00a318.5k vs \u00a315k). ROI 1.73 vs England 2.46.",
+        "tools": {
+          "analyst": {
+            "enabled": true
+          },
+          "sqlExecutor": {
+            "enabled": true
+          }
+        }
+      },
+      "width": 240,
+      "height": 202,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1449.303577719171,
+        "y": 716.1928324439659
+      },
+      "dragging": false
+    },
+    {
+      "id": "agent-customer",
+      "type": "agent",
+      "position": {
+        "x": 1447.5860734239034,
+        "y": 527.6622307622351
+      },
+      "data": {
+        "label": "\ud83d\udc65 Customer Agent",
+        "model": "mistral-large2",
+        "systemPrompt": "Customer insights analyst. Query SNOWFLOW_DEV.RETAIL_DEMO.CUSTOMER_LOYALTY. Analyze loyalty tiers, CLV scores, retention risk. Scotland has higher at-risk customers.",
+        "tools": {
+          "analyst": {
+            "enabled": true
+          },
+          "sqlExecutor": {
+            "enabled": true
+          }
+        }
+      },
+      "width": 240,
+      "height": 186,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1447.5860734239034,
+        "y": 527.6622307622351
+      },
+      "dragging": false
+    },
+    {
+      "id": "sv-sales",
+      "type": "semanticModel",
+      "position": {
+        "x": 334.6117478709598,
+        "y": 91.32615984626045
+      },
+      "data": {
+        "label": "\u2744\ufe0f Sales SV",
+        "yamlFile": "sales_revenue.yaml"
+      },
+      "width": 240,
+      "height": 105,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 334.6117478709598,
+        "y": 91.32615984626045
+      },
+      "dragging": false
+    },
+    {
+      "id": "sv-inventory",
+      "type": "semanticModel",
+      "position": {
+        "x": 335.12550005215144,
+        "y": 202.24611585998653
+      },
+      "data": {
+        "label": "\u2744\ufe0f Inventory SV",
+        "yamlFile": "inventory_supply.yaml"
+      },
+      "width": 240,
+      "height": 105,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 335.12550005215144,
+        "y": 202.24611585998653
+      },
+      "dragging": false
+    },
+    {
+      "id": "sv-ops",
+      "type": "semanticModel",
+      "position": {
+        "x": 335.12550005215166,
+        "y": 532.2102664104341
+      },
+      "data": {
+        "label": "\u2744\ufe0f Ops SV",
+        "yamlFile": "store_operations.yaml"
+      },
+      "width": 240,
+      "height": 105,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 335.12550005215166,
+        "y": 532.2102664104341
+      },
+      "dragging": false
+    },
+    {
+      "id": "sv-promo",
+      "type": "semanticModel",
+      "position": {
+        "x": 338.1242924804312,
+        "y": 423.0107602306093
+      },
+      "data": {
+        "label": "\u2744\ufe0f Promo SV",
+        "yamlFile": "promotions.yaml"
+      },
+      "width": 240,
+      "height": 105,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 338.1242924804312,
+        "y": 423.0107602306093
+      },
+      "dragging": false
+    },
+    {
+      "id": "sv-customer",
+      "type": "semanticModel",
+      "position": {
+        "x": 332.92714748661115,
+        "y": 314.1218773369911
+      },
+      "data": {
+        "label": "\u2744\ufe0f Customer SV",
+        "yamlFile": "customer_loyalty.yaml"
+      },
+      "width": 240,
+      "height": 105,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 332.92714748661115,
+        "y": 314.1218773369911
+      },
+      "dragging": false
+    },
+    {
+      "id": "pbi-renderer",
+      "type": "externalAgent",
+      "position": {
+        "x": 1792.8245606290407,
+        "y": 324.48474871141957
+      },
+      "data": {
+        "label": "\ud83d\udfe6 PBI Renderer",
+        "agentType": "custom",
+        "endpoint": "https://api.powerbi.com/v1.0/myorg/reports",
+        "method": "POST",
+        "authType": "oauth",
+        "provider": "Microsoft",
+        "systemPrompt": "Create visualization from Snowflake insights."
+      },
+      "width": 240,
+      "height": 177,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1792.8245606290407,
+        "y": 324.48474871141957
+      },
+      "dragging": false
+    },
+    {
+      "id": "copilot-callback",
+      "type": "externalAgent",
+      "position": {
+        "x": 2119.5803418026144,
+        "y": -2.7959025225960374
+      },
+      "data": {
+        "label": "\ud83d\udd04 Copilot Callback",
+        "agentType": "copilot",
+        "endpoint": "https://api.powerbi.com/v1.0/myorg/copilot/respond",
+        "method": "POST",
+        "authType": "oauth",
+        "provider": "Microsoft",
+        "systemPrompt": "Return response to user in Copilot."
+      },
+      "width": 240,
+      "height": 177,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2119.5803418026144,
+        "y": -2.7959025225960374
+      },
+      "dragging": false
+    },
+    {
+      "id": "output-final",
+      "type": "output",
+      "position": {
+        "x": 2116.937150374962,
+        "y": 519.3703144947816
+      },
+      "data": {
+        "label": "\ud83d\udcca SnowFlow View",
+        "outputType": "display"
+      },
+      "width": 150,
+      "height": 127,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 2116.937150374962,
+        "y": 519.3703144947816
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "pbi-copilot",
+      "target": "ms-fabric-agent"
+    },
+    {
+      "id": "e-tmdl1",
+      "source": "tmdl-sales",
+      "target": "ms-fabric-agent"
+    },
+    {
+      "id": "e-tmdl2",
+      "source": "tmdl-inventory",
+      "target": "ms-fabric-agent"
+    },
+    {
+      "id": "e-tmdl3",
+      "source": "tmdl-customer",
+      "target": "ms-fabric-agent"
+    },
+    {
+      "id": "e-tmdl4",
+      "source": "tmdl-promo",
+      "target": "ms-fabric-agent"
+    },
+    {
+      "id": "e-tmdl5",
+      "source": "tmdl-ops",
+      "target": "ms-fabric-agent"
+    },
+    {
+      "id": "e2",
+      "source": "ms-fabric-agent",
+      "target": "gateway"
+    },
+    {
+      "id": "e3",
+      "source": "gateway",
+      "target": "supervisor-retail"
+    },
+    {
+      "id": "e-data1",
+      "source": "src-sales",
+      "target": "supervisor-retail"
+    },
+    {
+      "id": "e-data2",
+      "source": "src-inventory",
+      "target": "supervisor-retail"
+    },
+    {
+      "id": "e-data3",
+      "source": "src-ops",
+      "target": "supervisor-retail"
+    },
+    {
+      "id": "e4",
+      "source": "supervisor-retail",
+      "target": "agent-sales"
+    },
+    {
+      "id": "e5",
+      "source": "supervisor-retail",
+      "target": "agent-inventory"
+    },
+    {
+      "id": "e6",
+      "source": "supervisor-retail",
+      "target": "agent-ops"
+    },
+    {
+      "id": "e7",
+      "source": "supervisor-retail",
+      "target": "agent-promo"
+    },
+    {
+      "id": "e8",
+      "source": "supervisor-retail",
+      "target": "agent-customer"
+    },
+    {
+      "id": "e9",
+      "source": "agent-sales",
+      "target": "sv-sales"
+    },
+    {
+      "id": "e10",
+      "source": "agent-inventory",
+      "target": "sv-inventory"
+    },
+    {
+      "id": "e11",
+      "source": "agent-ops",
+      "target": "sv-ops"
+    },
+    {
+      "id": "e12",
+      "source": "agent-promo",
+      "target": "sv-promo"
+    },
+    {
+      "id": "e13",
+      "source": "agent-customer",
+      "target": "sv-customer"
+    },
+    {
+      "id": "e14",
+      "source": "supervisor-retail",
+      "target": "pbi-renderer"
+    },
+    {
+      "id": "e15",
+      "source": "pbi-renderer",
+      "target": "copilot-callback"
+    },
+    {
+      "id": "e16",
+      "source": "copilot-callback",
+      "target": "output-final"
+    }
+  ],
+  "created_at": "2025-11-29T11:35:46.815550",
+  "updated_at": "2025-11-29T11:35:46.815579"
+}

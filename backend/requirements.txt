@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+langgraph
+langchain-community
+snowflake-snowpark-python
+snowflake-connector-python
+python-dotenv
+pandas
+pydantic
+httpx
+

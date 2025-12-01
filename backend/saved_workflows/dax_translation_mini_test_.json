@@ -1,0 +1,143 @@
+{
+  "name": "Dax Translation mini Test ",
+  "nodes": [
+    {
+      "id": "tmdl-input",
+      "type": "fileInput",
+      "position": {
+        "x": 592.6174148727757,
+        "y": -428.98558471411724
+      },
+      "data": {
+        "label": "\ud83d\udcca Power BI TMDL",
+        "fileType": "tmdl",
+        "fileContent": "// Power BI TMDL - Sales Model\ntable Sales\n  column ProductID: int64\n  column Amount: decimal\n  column Quantity: int64\n\n  measure 'Total Revenue' = SUM(Sales[Amount])\n  measure 'Avg Order Value' = DIVIDE(SUM(Sales[Amount]), COUNT(Sales[ProductID]), 0)\n  measure 'YoY Growth' = CALCULATE(SUM(Sales[Amount]), SAMEPERIODLASTYEAR('Date'[Date]))\n"
+      },
+      "width": 220,
+      "height": 139,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 592.6174148727757,
+        "y": -428.98558471411724
+      },
+      "dragging": false
+    },
+    {
+      "id": "dax-translator",
+      "type": "daxTranslator",
+      "position": {
+        "x": 747.4251858063055,
+        "y": -243.231262374925
+      },
+      "data": {
+        "label": "\u26a1 DAX Translator",
+        "daxExpression": "SUM(Sales[Amount])",
+        "autoTranslate": true
+      },
+      "width": 280,
+      "height": 198,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 747.4251858063055,
+        "y": -243.231262374925
+      },
+      "dragging": false
+    },
+    {
+      "id": "semantic-view",
+      "type": "semanticModel",
+      "position": {
+        "x": 994.1195322954966,
+        "y": 34.0479083339871
+      },
+      "data": {
+        "label": "\u2744\ufe0f Translated SV",
+        "database": "SNOWFLOW_DEV",
+        "schema": "DEMO",
+        "yamlFile": "sales_translated.yaml",
+        "description": "Snowflake Semantic View with DAX\u2192SQL measures"
+      },
+      "width": 240,
+      "height": 105,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 994.1195322954966,
+        "y": 34.0479083339871
+      },
+      "dragging": false
+    },
+    {
+      "id": "sales-agent",
+      "type": "agent",
+      "position": {
+        "x": 1620.497613492744,
+        "y": -16.859209058150867
+      },
+      "data": {
+        "label": "\ud83d\udcb0 Sales Agent",
+        "model": "mistral-large2",
+        "systemPrompt": "Sales analyst. Answer questions using the translated SQL measures: Total Revenue = SUM(sales.amount), Avg Order Value = AVG calculation.",
+        "tools": {
+          "analyst": {
+            "enabled": true
+          },
+          "sqlExecutor": {
+            "enabled": true
+          }
+        }
+      },
+      "width": 240,
+      "height": 186,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1620.497613492744,
+        "y": -16.859209058150867
+      },
+      "dragging": false
+    },
+    {
+      "id": "output",
+      "type": "output",
+      "position": {
+        "x": 2270.419791236347,
+        "y": -177.39135082847034
+      },
+      "data": {
+        "label": "\ud83d\udcca Results",
+        "outputType": "chart"
+      },
+      "width": 150,
+      "height": 125,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 2270.419791236347,
+        "y": -177.39135082847034
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "tmdl-input",
+      "target": "dax-translator"
+    },
+    {
+      "id": "e2",
+      "source": "dax-translator",
+      "target": "semantic-view"
+    },
+    {
+      "id": "e3",
+      "source": "semantic-view",
+      "target": "sales-agent"
+    },
+    {
+      "id": "e4",
+      "source": "sales-agent",
+      "target": "output"
+    }
+  ],
+  "created_at": "2025-11-29T14:23:17.885809",
+  "updated_at": "2025-11-29T14:23:17.886276"
+}

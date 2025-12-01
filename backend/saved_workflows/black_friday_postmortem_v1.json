@@ -1,0 +1,836 @@
+{
+  "name": "Black Friday Postmortem V1",
+  "nodes": [
+    {
+      "id": "pbi-copilot",
+      "type": "externalAgent",
+      "position": {
+        "x": -152.4542833497636,
+        "y": 44.302098049560044
+      },
+      "data": {
+        "label": "\ud83d\udfe6 Power BI Copilot",
+        "agentType": "copilot",
+        "endpoint": "https://api.powerbi.com/v1.0/myorg/copilot",
+        "method": "POST",
+        "authType": "oauth",
+        "provider": "Microsoft",
+        "systemPrompt": "Executive asks: Give me a complete Black Friday post-mortem analysis"
+      },
+      "width": 240,
+      "height": 177,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -152.4542833497636,
+        "y": 44.302098049560044
+      },
+      "dragging": false
+    },
+    {
+      "id": "ms-fabric",
+      "type": "externalAgent",
+      "position": {
+        "x": 50,
+        "y": 500
+      },
+      "data": {
+        "label": "\ud83d\udfe6 MS Fabric Agent",
+        "agentType": "custom",
+        "endpoint": "https://api.fabric.microsoft.com/v1/agent",
+        "method": "POST",
+        "authType": "oauth",
+        "provider": "Microsoft",
+        "systemPrompt": "Fabric OneLake data lakehouse context"
+      },
+      "width": 240,
+      "height": 177
+    },
+    {
+      "id": "market-intel",
+      "type": "externalAgent",
+      "position": {
+        "x": 50,
+        "y": 650
+      },
+      "data": {
+        "label": "\ud83d\udcca Market Intelligence",
+        "agentType": "custom",
+        "endpoint": "https://api.marketintel.com/v1/competitor-pricing",
+        "method": "GET",
+        "authType": "apiKey",
+        "provider": "Third-Party",
+        "systemPrompt": "Competitor pricing and market share data"
+      },
+      "width": 240,
+      "height": 177
+    },
+    {
+      "id": "agent-gateway",
+      "type": "externalAgent",
+      "position": {
+        "x": 150,
+        "y": 700
+      },
+      "data": {
+        "label": "\ud83d\udee1\ufe0f Agent Gateway",
+        "agentType": "gateway",
+        "endpoint": "internal://gateway",
+        "method": "POST",
+        "authType": "oauth",
+        "provider": "SnowFlow",
+        "systemPrompt": "Security Gateway: OAuth, Rate Limiting, Circuit Breaker, Audit Logging, Protocol Translation between Snowflake Cortex and Microsoft Fabric agents"
+      },
+      "width": 240,
+      "height": 162
+    },
+    {
+      "id": "tmdl-sales",
+      "type": "fileInput",
+      "position": {
+        "x": 257.7620061277246,
+        "y": 23.220417791149387
+      },
+      "data": {
+        "label": "\ud83d\udcb0 Sales TMDL",
+        "fileType": "tmdl",
+        "fileContent": "table Sales\n  column TransactionID: string\n  column ProductID: int64\n  column CustomerID: string\n  column Amount: decimal\n  column Cost: decimal\n  column Quantity: int64\n  column RegionID: string\n  column ChannelID: string  // Online vs In-Store\n  column DateKey: int64\n  column StoreID: string\n  \n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: Year-over-Year Growth with Time Intelligence\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'YoY Revenue Growth %' = \n    VAR CurrentPeriod = CALCULATE(SUM(Sales[Amount]), DATESYTD(Calendar[Date]))\n    VAR PriorPeriod = CALCULATE(SUM(Sales[Amount]), SAMEPERIODLASTYEAR(DATESYTD(Calendar[Date])))\n    RETURN DIVIDE(CurrentPeriod - PriorPeriod, PriorPeriod, 0) * 100\n\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: Rolling 7-Day Average\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'Rolling 7-Day Avg' = \n    AVERAGEX(\n      DATESINPERIOD(Calendar[Date], LASTDATE(Calendar[Date]), -7, DAY),\n      CALCULATE(SUM(Sales[Amount]))\n    )\n\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: Channel Mix (Online vs In-Store)\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'Online Share %' = \n    DIVIDE(\n      CALCULATE(SUM(Sales[Amount]), Sales[ChannelID] = \"ONLINE\"),\n      SUM(Sales[Amount]),\n      0\n    ) * 100\n\n  measure 'Gross Margin %' = DIVIDE(SUM(Sales[Amount]) - SUM(Sales[Cost]), SUM(Sales[Amount]), 0) * 100\n  measure 'Avg Transaction Value' = DIVIDE(SUM(Sales[Amount]), DISTINCTCOUNT(Sales[TransactionID]), 0)\n  measure 'Units Per Transaction' = DIVIDE(SUM(Sales[Quantity]), DISTINCTCOUNT(Sales[TransactionID]), 0)\n"
+      },
+      "width": 220,
+      "height": 139,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 257.7620061277246,
+        "y": 23.220417791149387
+      },
+      "dragging": false
+    },
+    {
+      "id": "tmdl-customer",
+      "type": "fileInput",
+      "position": {
+        "x": 258.5404357494715,
+        "y": 165.53629095942645
+      },
+      "data": {
+        "label": "\ud83d\udc65 Customer TMDL",
+        "fileType": "tmdl",
+        "fileContent": "table Customers\n  column CustomerID: string\n  column FirstPurchaseDate: date\n  column Segment: string  // New, Returning, VIP, Churned\n  column LoyaltyTier: string\n  column AcquisitionChannel: string\n  column LifetimeOrders: int64\n  column LifetimeRevenue: decimal\n  \n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: Customer Lifetime Value (LTV)\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'Customer LTV' = \n    AVERAGEX(\n      VALUES(Customers[CustomerID]),\n      VAR CustomerRev = CALCULATE(SUM(Sales[Amount]))\n      VAR TenureMonths = DATEDIFF(MIN(Customers[FirstPurchaseDate]), TODAY(), MONTH)\n      VAR MonthlyValue = DIVIDE(CustomerRev, MAX(TenureMonths, 1))\n      RETURN MonthlyValue * 36  // 3-year projected LTV\n    )\n\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: New vs Returning Customer Split\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'New Customer Revenue %' = \n    VAR NewCustomerRev = CALCULATE(\n      SUM(Sales[Amount]),\n      FILTER(Customers, Customers[Segment] = \"New\")\n    )\n    RETURN DIVIDE(NewCustomerRev, SUM(Sales[Amount]), 0) * 100\n\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: Customer Acquisition Cost Efficiency\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'CAC to LTV Ratio' = \n    DIVIDE([Customer LTV], [Avg Acquisition Cost], 0)\n\n  measure 'Customer Count' = DISTINCTCOUNT(Customers[CustomerID])\n  measure 'Repeat Purchase Rate' = DIVIDE(\n    CALCULATE(COUNTROWS(Customers), Customers[LifetimeOrders] > 1),\n    COUNTROWS(Customers),\n    0\n  ) * 100\n"
+      },
+      "width": 220,
+      "height": 139,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 258.5404357494715,
+        "y": 165.53629095942645
+      },
+      "dragging": false
+    },
+    {
+      "id": "tmdl-inventory",
+      "type": "fileInput",
+      "position": {
+        "x": 262.81689415529127,
+        "y": 309.0666212190124
+      },
+      "data": {
+        "label": "\ud83d\udce6 Inventory TMDL",
+        "fileType": "tmdl",
+        "fileContent": "table Inventory\n  column ProductID: int64\n  column SKU: string\n  column StockLevel: int64\n  column ReorderPoint: int64\n  column SafetyStock: int64\n  column LeadTimeDays: int64\n  column WarehouseID: string\n  column LastRestockDate: date\n  \n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: Days of Inventory On Hand\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'Days On Hand' = \n    VAR AvgDailySales = DIVIDE(\n      CALCULATE(SUM(Sales[Quantity]), DATESINPERIOD(Calendar[Date], TODAY(), -30, DAY)),\n      30\n    )\n    VAR CurrentStock = SUM(Inventory[StockLevel])\n    RETURN DIVIDE(CurrentStock, MAX(AvgDailySales, 0.1), 0)\n\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: Stockout Revenue Impact\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'Stockout Lost Revenue' = \n    VAR StockoutItems = FILTER(Inventory, Inventory[StockLevel] = 0)\n    VAR AvgItemRevenue = AVERAGEX(\n      VALUES(Products[ProductID]),\n      CALCULATE(SUM(Sales[Amount]))\n    )\n    RETURN COUNTROWS(StockoutItems) * AvgItemRevenue\n\n  measure 'In-Stock Rate %' = DIVIDE(\n    CALCULATE(COUNTROWS(Inventory), Inventory[StockLevel] > 0),\n    COUNTROWS(Inventory),\n    0\n  ) * 100\n  measure 'Below Reorder Point' = CALCULATE(COUNTROWS(Inventory), Inventory[StockLevel] < Inventory[ReorderPoint])\n"
+      },
+      "width": 220,
+      "height": 139,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 262.81689415529127,
+        "y": 309.0666212190124
+      },
+      "dragging": false
+    },
+    {
+      "id": "tmdl-promo",
+      "type": "fileInput",
+      "position": {
+        "x": 264.6644383784932,
+        "y": 453.81140856990726
+      },
+      "data": {
+        "label": "\ud83c\udff7\ufe0f Promotions TMDL",
+        "fileType": "tmdl",
+        "fileContent": "table Promotions\n  column PromoID: string\n  column PromoType: string  // BOGO, Percentage, Flash, Bundle\n  column DiscountPercent: decimal\n  column StartDate: date\n  column EndDate: date\n  column CategoryID: string\n  column MinPurchase: decimal\n  column RedemptionCount: int64\n  column PromoCost: decimal\n  \n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: Promotional Lift with Control Group\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'Promo Lift %' = \n    VAR PromoSales = CALCULATE(SUM(Sales[Amount]), Promotions[IsActive] = TRUE)\n    VAR BaselinePeriod = DATESINPERIOD(Calendar[Date], MIN(Promotions[StartDate]), -4, WEEK)\n    VAR BaselineDailyAvg = DIVIDE(\n      CALCULATE(SUM(Sales[Amount]), BaselinePeriod),\n      28\n    )\n    VAR PromoDays = DATEDIFF(MIN(Promotions[StartDate]), MAX(Promotions[EndDate]), DAY)\n    VAR ExpectedSales = BaselineDailyAvg * PromoDays\n    RETURN DIVIDE(PromoSales - ExpectedSales, ExpectedSales, 0) * 100\n\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: Promotional ROI\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'Promo ROI' = \n    VAR IncrementalRevenue = [Promo Lift %] / 100 * SUM(Sales[Amount])\n    VAR PromoCost = SUM(Promotions[PromoCost])\n    RETURN DIVIDE(IncrementalRevenue - PromoCost, PromoCost, 0)\n\n  measure 'Redemption Rate %' = DIVIDE(SUM(Promotions[RedemptionCount]), [Total Transactions], 0) * 100\n  measure 'Avg Discount Given' = AVERAGE(Promotions[DiscountPercent])\n"
+      },
+      "width": 220,
+      "height": 155,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 264.6644383784932,
+        "y": 453.81140856990726
+      },
+      "dragging": false
+    },
+    {
+      "id": "tmdl-ops",
+      "type": "fileInput",
+      "position": {
+        "x": 265.4428680002401,
+        "y": 612.1220926151087
+      },
+      "data": {
+        "label": "\ud83c\udfea Operations TMDL",
+        "fileType": "tmdl",
+        "fileContent": "table StoreOperations\n  column StoreID: string\n  column Region: string\n  column StoreType: string  // Flagship, Standard, Express\n  column TrafficCount: int64\n  column StaffCount: int64\n  column OperatingHours: decimal\n  column DateKey: int64\n  column FulfillmentType: string  // In-Store, BOPIS, Ship-from-Store\n\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: Conversion Rate with Traffic Attribution\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'Conversion Rate %' = \n    DIVIDE(\n      DISTINCTCOUNT(Sales[TransactionID]),\n      SUM(StoreOperations[TrafficCount]),\n      0\n    ) * 100\n\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: Revenue Per Labor Hour\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'Rev Per Labor Hour' = \n    DIVIDE(\n      SUM(Sales[Amount]),\n      SUMX(StoreOperations, StoreOperations[StaffCount] * StoreOperations[OperatingHours]),\n      0\n    )\n\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: BOPIS Share (Buy Online Pick-up In Store)\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'BOPIS Share %' = \n    DIVIDE(\n      CALCULATE(COUNTROWS(StoreOperations), StoreOperations[FulfillmentType] = \"BOPIS\"),\n      COUNTROWS(StoreOperations),\n      0\n    ) * 100\n\n  measure 'Traffic vs Last Year' = \n    VAR CurrentTraffic = SUM(StoreOperations[TrafficCount])\n    VAR LastYearTraffic = CALCULATE(SUM(StoreOperations[TrafficCount]), SAMEPERIODLASTYEAR(Calendar[Date]))\n    RETURN DIVIDE(CurrentTraffic - LastYearTraffic, LastYearTraffic, 0) * 100\n"
+      },
+      "width": 220,
+      "height": 139,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 265.4428680002401,
+        "y": 612.1220926151087
+      },
+      "dragging": false
+    },
+    {
+      "id": "tmdl-finance",
+      "type": "fileInput",
+      "position": {
+        "x": 266.85438475388014,
+        "y": 757.7906520776045
+      },
+      "data": {
+        "label": "\ud83d\udcb5 Finance TMDL",
+        "fileType": "tmdl",
+        "fileContent": "table Finance\n  column CategoryID: string\n  column BudgetAmount: decimal\n  column ActualAmount: decimal\n  column ForecastAmount: decimal\n  column Period: string\n  column CostCenter: string\n\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: Budget Variance Analysis\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'Budget Variance %' = \n    DIVIDE(\n      SUM(Finance[ActualAmount]) - SUM(Finance[BudgetAmount]),\n      SUM(Finance[BudgetAmount]),\n      0\n    ) * 100\n\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  // COMPLEX DAX MEASURE: Forecast Accuracy\n  // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n  measure 'Forecast Accuracy %' = \n    1 - ABS(DIVIDE(\n      SUM(Finance[ActualAmount]) - SUM(Finance[ForecastAmount]),\n      SUM(Finance[ForecastAmount]),\n      0\n    ))\n\n  measure 'Marketing Spend ROI' = DIVIDE([Incremental Revenue], [Marketing Spend], 0)\n"
+      },
+      "width": 220,
+      "height": 139,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 266.85438475388014,
+        "y": 757.7906520776045
+      },
+      "dragging": false
+    },
+    {
+      "id": "dax-translator",
+      "type": "daxTranslator",
+      "position": {
+        "x": 565.8412995101942,
+        "y": -7.500132745464896
+      },
+      "data": {
+        "label": "\u26a1 Enterprise DAX Translator",
+        "daxExpression": "// Complex multi-measure Black Friday analysis\nVAR BlackFridayRevenue = CALCULATE(SUM(Sales[Amount]), Calendar[Date] = DATE(2024, 11, 29))\nVAR LastYearBF = CALCULATE(SUM(Sales[Amount]), Calendar[Date] = DATE(2023, 11, 24))\nVAR YoYGrowth = DIVIDE(BlackFridayRevenue - LastYearBF, LastYearBF, 0)\nVAR OnlineShare = DIVIDE(CALCULATE(SUM(Sales[Amount]), Sales[ChannelID] = \"ONLINE\"), BlackFridayRevenue, 0)\nVAR AvgBasketSize = DIVIDE(BlackFridayRevenue, DISTINCTCOUNT(Sales[TransactionID]), 0)\nVAR NewCustomerRev = CALCULATE(SUM(Sales[Amount]), FILTER(Customers, Customers[Segment] = \"New\"))\nRETURN \n  \"YoY: \" & FORMAT(YoYGrowth, \"0.0%\") & \n  \" | Online: \" & FORMAT(OnlineShare, \"0.0%\") &\n  \" | Basket: \" & FORMAT(AvgBasketSize, \"$#,##0\")",
+        "sqlOutput": "",
+        "confidence": "analyzing"
+      },
+      "width": 280,
+      "height": 292,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 565.8412995101942,
+        "y": -7.500132745464896
+      }
+    },
+    {
+      "id": "schema-transformer",
+      "type": "schemaTransformer",
+      "position": {
+        "x": 572.1143443282035,
+        "y": 331.06426905623505
+      },
+      "data": {
+        "label": "\ud83d\udd04 Schema Transformer",
+        "sourceFormat": "json",
+        "targetFormat": "yaml",
+        "targetPlatform": "snowflake",
+        "extractionAgent": "cortex",
+        "database": "SNOWFLOW_PROD.RETAIL_ANALYTICS"
+      },
+      "width": 260,
+      "height": 187,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 572.1143443282035,
+        "y": 331.06426905623505
+      },
+      "dragging": false
+    },
+    {
+      "id": "sv-sales",
+      "type": "semanticModel",
+      "position": {
+        "x": 597.0410424640177,
+        "y": 555.6695288035829
+      },
+      "data": {
+        "label": "\u2744\ufe0f Sales SV",
+        "yamlFile": "bf_sales_analytics.yaml",
+        "description": "Black Friday sales semantic view"
+      },
+      "width": 240,
+      "height": 105,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 597.0410424640177,
+        "y": 555.6695288035829
+      },
+      "dragging": false
+    },
+    {
+      "id": "sv-customer",
+      "type": "semanticModel",
+      "position": {
+        "x": 598.4341128617805,
+        "y": 659.3736451447122
+      },
+      "data": {
+        "label": "\u2744\ufe0f Customer SV",
+        "yamlFile": "bf_customer_analytics.yaml",
+        "description": "Customer behavior semantic view"
+      },
+      "width": 240,
+      "height": 105,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 598.4341128617805,
+        "y": 659.3736451447122
+      },
+      "dragging": false
+    },
+    {
+      "id": "sv-inventory",
+      "type": "semanticModel",
+      "position": {
+        "x": 599.8271832595437,
+        "y": 767.3542198916614
+      },
+      "data": {
+        "label": "\u2744\ufe0f Inventory SV",
+        "yamlFile": "bf_inventory_analytics.yaml",
+        "description": "Inventory & stockout semantic view"
+      },
+      "width": 240,
+      "height": 105,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 599.8271832595437,
+        "y": 767.3542198916614
+      },
+      "dragging": false
+    },
+    {
+      "id": "sv-promo",
+      "type": "semanticModel",
+      "position": {
+        "x": 602.2893682587619,
+        "y": 876.4039092400653
+      },
+      "data": {
+        "label": "\u2744\ufe0f Promo SV",
+        "yamlFile": "bf_promo_analytics.yaml",
+        "description": "Promotional lift semantic view"
+      },
+      "width": 240,
+      "height": 105,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 602.2893682587619,
+        "y": 876.4039092400653
+      },
+      "dragging": false
+    },
+    {
+      "id": "sv-ops",
+      "type": "semanticModel",
+      "position": {
+        "x": 606.8897824608896,
+        "y": 985.4535985884694
+      },
+      "data": {
+        "label": "\u2744\ufe0f Operations SV",
+        "yamlFile": "bf_operations_analytics.yaml",
+        "description": "Store operations semantic view"
+      },
+      "width": 240,
+      "height": 105,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 606.8897824608896,
+        "y": 985.4535985884694
+      },
+      "dragging": false
+    },
+    {
+      "id": "sv-finance",
+      "type": "semanticModel",
+      "position": {
+        "x": 609.351967460108,
+        "y": 1096.6415171397834
+      },
+      "data": {
+        "label": "\u2744\ufe0f Finance SV",
+        "yamlFile": "bf_finance_analytics.yaml",
+        "description": "Financial performance semantic view"
+      },
+      "width": 240,
+      "height": 105,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 609.351967460108,
+        "y": 1096.6415171397834
+      },
+      "dragging": false
+    },
+    {
+      "id": "supervisor",
+      "type": "supervisor",
+      "position": {
+        "x": 964.1468760872965,
+        "y": 847.462245472856
+      },
+      "data": {
+        "label": "\ud83e\udde0 Executive Analytics Supervisor",
+        "model": "mistral-large2",
+        "strategy": "adaptive",
+        "childAgents": [
+          "Sales",
+          "Customer",
+          "Inventory",
+          "Promo",
+          "Operations",
+          "Finance"
+        ],
+        "systemPrompt": "You are a Fortune 500 retail executive analyst. Route queries to appropriate domain experts for Black Friday post-mortem analysis."
+      },
+      "width": 214,
+      "height": 127,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 964.1468760872965,
+        "y": 847.462245472856
+      },
+      "dragging": false
+    },
+    {
+      "id": "agent-sales",
+      "type": "cortexAgent",
+      "position": {
+        "x": 1397.1060341075975,
+        "y": 146.42192487674956
+      },
+      "data": {
+        "label": "\ud83d\udcb0 Sales Agent",
+        "model": "mistral-large2",
+        "tools": [
+          "Analyst",
+          "Search",
+          "SQL"
+        ],
+        "systemPrompt": "Sales analyst specializing in revenue, YoY growth, channel mix, and transaction analysis for Black Friday."
+      },
+      "width": 240,
+      "height": 188,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 1397.1060341075975,
+        "y": 146.42192487674956
+      },
+      "dragging": false
+    },
+    {
+      "id": "agent-customer",
+      "type": "cortexAgent",
+      "position": {
+        "x": 1396.6615854816612,
+        "y": 335.8865640422286
+      },
+      "data": {
+        "label": "\ud83d\udc65 Customer Agent",
+        "model": "mistral-large2",
+        "tools": [
+          "Analyst",
+          "Search",
+          "SQL"
+        ],
+        "systemPrompt": "Customer analyst specializing in LTV, acquisition, retention, and segment behavior for Black Friday."
+      },
+      "width": 240,
+      "height": 186,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1396.6615854816612,
+        "y": 335.8865640422286
+      },
+      "dragging": false
+    },
+    {
+      "id": "agent-inventory",
+      "type": "cortexAgent",
+      "position": {
+        "x": 1397.2138592044737,
+        "y": 718.2074042780027
+      },
+      "data": {
+        "label": "\ud83d\udce6 Inventory Agent",
+        "model": "mistral-large2",
+        "tools": [
+          "Analyst",
+          "Search",
+          "SQL"
+        ],
+        "systemPrompt": "Supply chain analyst specializing in stockouts, days-on-hand, and inventory optimization for Black Friday."
+      },
+      "width": 240,
+      "height": 186,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1397.2138592044737,
+        "y": 718.2074042780027
+      },
+      "dragging": false
+    },
+    {
+      "id": "agent-promo",
+      "type": "cortexAgent",
+      "position": {
+        "x": 1394.330471196417,
+        "y": 528.9741198204781
+      },
+      "data": {
+        "label": "\ud83c\udff7\ufe0f Promo Agent",
+        "model": "mistral-large2",
+        "tools": [
+          "Analyst",
+          "Search",
+          "SQL"
+        ],
+        "systemPrompt": "Promotional analyst specializing in lift, ROI, redemption rates, and campaign effectiveness for Black Friday."
+      },
+      "width": 240,
+      "height": 186,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1394.330471196417,
+        "y": 528.9741198204781
+      },
+      "dragging": false
+    },
+    {
+      "id": "agent-ops",
+      "type": "cortexAgent",
+      "position": {
+        "x": 1397.2138592044737,
+        "y": 907.6998533725739
+      },
+      "data": {
+        "label": "\ud83c\udfea Operations Agent",
+        "model": "mistral-large2",
+        "tools": [
+          "Analyst",
+          "Search",
+          "SQL"
+        ],
+        "systemPrompt": "Operations analyst specializing in store traffic, conversion, labor efficiency, and fulfillment for Black Friday."
+      },
+      "width": 240,
+      "height": 186,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1397.2138592044737,
+        "y": 907.6998533725739
+      },
+      "dragging": false
+    },
+    {
+      "id": "agent-finance",
+      "type": "cortexAgent",
+      "position": {
+        "x": 1399.6760442036918,
+        "y": 1098.0022524315536
+      },
+      "data": {
+        "label": "\ud83d\udcb5 Finance Agent",
+        "model": "mistral-large2",
+        "tools": [
+          "Analyst",
+          "Search",
+          "SQL"
+        ],
+        "systemPrompt": "Financial analyst specializing in budget variance, forecast accuracy, and ROI for Black Friday."
+      },
+      "width": 240,
+      "height": 186,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1399.6760442036918,
+        "y": 1098.0022524315536
+      },
+      "dragging": false
+    },
+    {
+      "id": "yaml-output",
+      "type": "fileOutput",
+      "position": {
+        "x": 2145.8987878485436,
+        "y": 887.3334597973704
+      },
+      "data": {
+        "label": "\ud83d\udcc4 Cortex YAML Bundle",
+        "outputFormat": "yaml",
+        "description": "Complete translated semantic model bundle"
+      },
+      "width": 260,
+      "height": 190,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2145.8987878485436,
+        "y": 887.3334597973704
+      },
+      "dragging": false
+    },
+    {
+      "id": "pbi-callback",
+      "type": "externalAgent",
+      "position": {
+        "x": 1835.9503711252337,
+        "y": 544.3304711964171
+      },
+      "data": {
+        "label": "\ud83d\udd04 Copilot Callback",
+        "agentType": "copilot",
+        "endpoint": "https://api.powerbi.com/v1.0/myorg/copilot/respond",
+        "method": "POST",
+        "authType": "oauth",
+        "provider": "Microsoft",
+        "systemPrompt": "Return comprehensive Black Friday analysis to Power BI for executive dashboard visualization"
+      },
+      "width": 240,
+      "height": 177,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1835.9503711252337,
+        "y": 544.3304711964171
+      },
+      "dragging": false
+    },
+    {
+      "id": "output-final",
+      "type": "output",
+      "position": {
+        "x": 2072.548653843084,
+        "y": 186.1770797090117
+      },
+      "data": {
+        "label": "\ud83d\udcca Executive Dashboard",
+        "outputType": "display"
+      },
+      "width": 150,
+      "height": 174,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2072.548653843084,
+        "y": 186.1770797090117
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "pbi-copilot",
+      "target": "agent-gateway"
+    },
+    {
+      "id": "e2",
+      "source": "ms-fabric",
+      "target": "agent-gateway"
+    },
+    {
+      "id": "e3",
+      "source": "market-intel",
+      "target": "agent-gateway"
+    },
+    {
+      "id": "e1b",
+      "source": "agent-gateway",
+      "target": "dax-translator"
+    },
+    {
+      "id": "e4",
+      "source": "tmdl-sales",
+      "target": "dax-translator"
+    },
+    {
+      "id": "e5",
+      "source": "tmdl-customer",
+      "target": "dax-translator"
+    },
+    {
+      "id": "e6",
+      "source": "tmdl-inventory",
+      "target": "dax-translator"
+    },
+    {
+      "id": "e7",
+      "source": "tmdl-promo",
+      "target": "dax-translator"
+    },
+    {
+      "id": "e8",
+      "source": "tmdl-ops",
+      "target": "dax-translator"
+    },
+    {
+      "id": "e9",
+      "source": "tmdl-finance",
+      "target": "dax-translator"
+    },
+    {
+      "id": "e10",
+      "source": "dax-translator",
+      "target": "schema-transformer"
+    },
+    {
+      "id": "e11",
+      "source": "schema-transformer",
+      "target": "sv-sales"
+    },
+    {
+      "id": "e12",
+      "source": "schema-transformer",
+      "target": "sv-customer"
+    },
+    {
+      "id": "e13",
+      "source": "schema-transformer",
+      "target": "sv-inventory"
+    },
+    {
+      "id": "e14",
+      "source": "schema-transformer",
+      "target": "sv-promo"
+    },
+    {
+      "id": "e15",
+      "source": "schema-transformer",
+      "target": "sv-ops"
+    },
+    {
+      "id": "e16",
+      "source": "schema-transformer",
+      "target": "sv-finance"
+    },
+    {
+      "id": "e17",
+      "source": "schema-transformer",
+      "target": "yaml-output"
+    },
+    {
+      "id": "e18",
+      "source": "sv-sales",
+      "target": "supervisor"
+    },
+    {
+      "id": "e19",
+      "source": "sv-customer",
+      "target": "supervisor"
+    },
+    {
+      "id": "e20",
+      "source": "sv-inventory",
+      "target": "supervisor"
+    },
+    {
+      "id": "e21",
+      "source": "sv-promo",
+      "target": "supervisor"
+    },
+    {
+      "id": "e22",
+      "source": "sv-ops",
+      "target": "supervisor"
+    },
+    {
+      "id": "e23",
+      "source": "sv-finance",
+      "target": "supervisor"
+    },
+    {
+      "id": "e24",
+      "source": "supervisor",
+      "target": "agent-sales"
+    },
+    {
+      "id": "e25",
+      "source": "supervisor",
+      "target": "agent-customer"
+    },
+    {
+      "id": "e26",
+      "source": "supervisor",
+      "target": "agent-inventory"
+    },
+    {
+      "id": "e27",
+      "source": "supervisor",
+      "target": "agent-promo"
+    },
+    {
+      "id": "e28",
+      "source": "supervisor",
+      "target": "agent-ops"
+    },
+    {
+      "id": "e29",
+      "source": "supervisor",
+      "target": "agent-finance"
+    },
+    {
+      "id": "e32",
+      "source": "agent-sales",
+      "target": "output-final"
+    },
+    {
+      "id": "e33",
+      "source": "agent-customer",
+      "target": "output-final"
+    },
+    {
+      "id": "e34",
+      "source": "agent-inventory",
+      "target": "output-final"
+    },
+    {
+      "id": "e35",
+      "source": "agent-promo",
+      "target": "output-final"
+    },
+    {
+      "id": "e36",
+      "source": "agent-ops",
+      "target": "output-final"
+    },
+    {
+      "id": "e37",
+      "source": "agent-finance",
+      "target": "output-final"
+    },
+    {
+      "id": "e30",
+      "source": "supervisor",
+      "target": "pbi-callback"
+    },
+    {
+      "id": "e31",
+      "source": "pbi-callback",
+      "target": "output-final"
+    },
+    {
+      "id": "e38",
+      "source": "yaml-output",
+      "target": "supervisor"
+    }
+  ],
+  "created_at": "2025-11-30T21:51:37.856788",
+  "updated_at": "2025-11-30T21:51:37.857074"
+}

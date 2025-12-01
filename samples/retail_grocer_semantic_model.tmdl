@@ -1,0 +1,2042 @@
+// ============================================================================
+// NATIONAL GROCERY RETAILER - POWER BI SEMANTIC MODEL
+// Inspired by Tesco/Sainsbury's/M&S analytics patterns
+// ============================================================================
+// This model represents a simplified but realistic view of a UK grocery
+// retailer's analytics layer covering: Sales, Inventory, Customer, Promotions
+// ============================================================================
+
+model Retail_Analytics_Enterprise
+    culture: en-GB
+    defaultPowerBIDataSourceVersion: powerBI_V3
+
+// ============================================================================
+// DIMENSION TABLES
+// ============================================================================
+
+table dim_Product
+    lineageTag: prod-dim-001
+    description: Master product dimension with full hierarchy
+    
+    column ProductKey
+        dataType: int64
+        isKey: true
+        lineageTag: prod-001
+        summarizeBy: none
+
+    column SKU
+        dataType: string
+        lineageTag: prod-002
+        summarizeBy: none
+        annotation Description = Stock Keeping Unit - unique product identifier
+
+    column ProductName
+        dataType: string
+        lineageTag: prod-003
+        summarizeBy: none
+
+    column Barcode
+        dataType: string
+        lineageTag: prod-004
+        summarizeBy: none
+        annotation SynonymList = EAN, GTIN, UPC
+
+    column CategoryL1
+        dataType: string
+        lineageTag: prod-005
+        summarizeBy: none
+        annotation Description = Top level category (e.g., Fresh, Ambient, Frozen)
+        annotation SynonymList = Department, Division
+
+    column CategoryL2
+        dataType: string
+        lineageTag: prod-006
+        summarizeBy: none
+        annotation Description = Sub-category (e.g., Dairy, Bakery, Meat)
+        annotation SynonymList = Category, Aisle
+
+    column CategoryL3
+        dataType: string
+        lineageTag: prod-007
+        summarizeBy: none
+        annotation Description = Product group (e.g., Milk, Cheese, Yogurt)
+        annotation SynonymList = Sub-category, Segment
+
+    column Brand
+        dataType: string
+        lineageTag: prod-008
+        summarizeBy: none
+
+    column IsOwnLabel
+        dataType: boolean
+        lineageTag: prod-009
+        summarizeBy: none
+        annotation Description = True if private label/own brand product
+        annotation SynonymList = Private Label, Store Brand, Own Brand
+
+    column Supplier
+        dataType: string
+        lineageTag: prod-010
+        summarizeBy: none
+
+    column UnitSize
+        dataType: string
+        lineageTag: prod-011
+        summarizeBy: none
+        annotation Description = Pack size (e.g., 500ml, 1kg)
+
+    column ShelfLife_Days
+        dataType: int64
+        lineageTag: prod-012
+        summarizeBy: average
+        annotation Description = Product shelf life in days
+
+    column IsChilled
+        dataType: boolean
+        lineageTag: prod-013
+        summarizeBy: none
+
+    column IsFrozen
+        dataType: boolean
+        lineageTag: prod-014
+        summarizeBy: none
+
+    column VATRate
+        dataType: decimal
+        lineageTag: prod-015
+        summarizeBy: none
+        annotation Description = VAT rate (0% for most food, 20% for non-food)
+
+    hierarchy ProductHierarchy
+        level CategoryL1
+        level CategoryL2
+        level CategoryL3
+        level Brand
+        level ProductName
+
+
+table dim_Store
+    lineageTag: store-dim-001
+    description: Store/location master dimension
+    
+    column StoreKey
+        dataType: int64
+        isKey: true
+        lineageTag: store-001
+        summarizeBy: none
+
+    column StoreCode
+        dataType: string
+        lineageTag: store-002
+        summarizeBy: none
+        annotation SynonymList = Store Number, Branch Code
+
+    column StoreName
+        dataType: string
+        lineageTag: store-003
+        summarizeBy: none
+        annotation SynonymList = Branch Name, Location
+
+    column StoreFormat
+        dataType: string
+        lineageTag: store-004
+        summarizeBy: none
+        annotation Description = Store format type
+        annotation AllowedValues = Extra, Superstore, Metro, Express, Local, Convenience
+
+    column Region
+        dataType: string
+        lineageTag: store-005
+        summarizeBy: none
+        annotation SynonymList = Area, Territory
+
+    column District
+        dataType: string
+        lineageTag: store-006
+        summarizeBy: none
+
+    column PostCode
+        dataType: string
+        lineageTag: store-007
+        summarizeBy: none
+
+    column City
+        dataType: string
+        lineageTag: store-008
+        summarizeBy: none
+        annotation SynonymList = Town
+
+    column Country
+        dataType: string
+        lineageTag: store-009
+        summarizeBy: none
+
+    column SqFt_SalesFloor
+        dataType: int64
+        lineageTag: store-010
+        summarizeBy: sum
+        annotation Description = Sales floor square footage
+        annotation SynonymList = Selling Space, Floor Space
+
+    column OpenDate
+        dataType: dateTime
+        lineageTag: store-011
+        summarizeBy: none
+
+    column ManagerName
+        dataType: string
+        lineageTag: store-012
+        summarizeBy: none
+
+    column HasPharmacy
+        dataType: boolean
+        lineageTag: store-013
+        summarizeBy: none
+
+    column HasPetrolStation
+        dataType: boolean
+        lineageTag: store-014
+        summarizeBy: none
+        annotation SynonymList = Has Fuel Station, Has Forecourt
+
+    column HasClickCollect
+        dataType: boolean
+        lineageTag: store-015
+        summarizeBy: none
+        annotation SynonymList = Has C&C, BOPIS
+
+    column IsComparable
+        dataType: boolean
+        lineageTag: store-016
+        summarizeBy: none
+        annotation Description = Included in like-for-like calculations (open > 1 year)
+        annotation SynonymList = LFL Store, Comp Store
+
+    hierarchy StoreHierarchy
+        level Country
+        level Region
+        level District
+        level StoreName
+
+
+table dim_Date
+    lineageTag: date-dim-001
+    description: Standard date dimension with retail calendar
+    
+    column DateKey
+        dataType: int64
+        isKey: true
+        lineageTag: date-001
+        summarizeBy: none
+
+    column Date
+        dataType: dateTime
+        formatString: dd/MM/yyyy
+        lineageTag: date-002
+        summarizeBy: none
+
+    column DayOfWeek
+        dataType: string
+        lineageTag: date-003
+        summarizeBy: none
+
+    column DayOfWeekNum
+        dataType: int64
+        lineageTag: date-004
+        summarizeBy: none
+
+    column WeekNum
+        dataType: int64
+        lineageTag: date-005
+        summarizeBy: none
+        annotation Description = ISO week number
+
+    column WeekEnding
+        dataType: dateTime
+        lineageTag: date-006
+        summarizeBy: none
+        annotation Description = Week ending Saturday (retail standard)
+
+    column MonthName
+        dataType: string
+        lineageTag: date-007
+        summarizeBy: none
+
+    column MonthNum
+        dataType: int64
+        lineageTag: date-008
+        summarizeBy: none
+
+    column Quarter
+        dataType: string
+        lineageTag: date-009
+        summarizeBy: none
+
+    column FiscalYear
+        dataType: int64
+        lineageTag: date-010
+        summarizeBy: none
+        annotation Description = Fiscal year (retailers often end in Feb/March)
+
+    column FiscalPeriod
+        dataType: int64
+        lineageTag: date-011
+        summarizeBy: none
+        annotation Description = 4-4-5 retail fiscal period
+
+    column IsWeekend
+        dataType: boolean
+        lineageTag: date-012
+        summarizeBy: none
+
+    column IsBankHoliday
+        dataType: boolean
+        lineageTag: date-013
+        summarizeBy: none
+
+    column IsChristmasPeriod
+        dataType: boolean
+        lineageTag: date-014
+        summarizeBy: none
+        annotation Description = Golden Quarter (Oct-Dec)
+
+    column IsEaster
+        dataType: boolean
+        lineageTag: date-015
+        summarizeBy: none
+
+    hierarchy DateHierarchy
+        level FiscalYear
+        level Quarter
+        level MonthName
+        level WeekEnding
+        level Date
+
+
+table dim_Customer
+    lineageTag: cust-dim-001
+    description: Customer/loyalty dimension (Clubcard/Nectar equivalent)
+    
+    column CustomerKey
+        dataType: int64
+        isKey: true
+        lineageTag: cust-001
+        summarizeBy: none
+
+    column LoyaltyCardNumber
+        dataType: string
+        lineageTag: cust-002
+        summarizeBy: none
+        annotation SynonymList = Clubcard Number, Nectar Number, Loyalty ID
+
+    column CustomerSegment
+        dataType: string
+        lineageTag: cust-003
+        summarizeBy: none
+        annotation Description = Customer value segment
+        annotation AllowedValues = Premium, Core, Occasional, Lapsed, New
+        annotation SynonymList = Value Tier, Customer Tier
+
+    column LifestyleSegment
+        dataType: string
+        lineageTag: cust-004
+        summarizeBy: none
+        annotation Description = Lifestyle/demographic segment
+        annotation AllowedValues = Family, Young Professional, Retiree, Health Conscious, Budget Shopper, Foodie
+        annotation SynonymList = Demographics, Customer Type
+
+    column JoinDate
+        dataType: dateTime
+        lineageTag: cust-005
+        summarizeBy: none
+
+    column PostCodeArea
+        dataType: string
+        lineageTag: cust-006
+        summarizeBy: none
+        annotation Description = First part of postcode for geo analysis
+
+    column PreferredStore
+        dataType: string
+        lineageTag: cust-007
+        summarizeBy: none
+
+    column HasDeliveryPass
+        dataType: boolean
+        lineageTag: cust-008
+        summarizeBy: none
+        annotation SynonymList = Delivery Saver, Unlimited Delivery
+
+    column TotalLifetimeSpend
+        dataType: decimal
+        lineageTag: cust-009
+        summarizeBy: sum
+        annotation SynonymList = CLV, Customer Lifetime Value
+
+    column AvgBasketValue
+        dataType: decimal
+        lineageTag: cust-010
+        summarizeBy: average
+        annotation SynonymList = ATV, Average Transaction Value
+
+    column ShopFrequency
+        dataType: string
+        lineageTag: cust-011
+        summarizeBy: none
+        annotation AllowedValues = Weekly, Fortnightly, Monthly, Occasional
+
+
+table dim_Promotion
+    lineageTag: promo-dim-001
+    description: Promotion/offer master dimension
+    
+    column PromotionKey
+        dataType: int64
+        isKey: true
+        lineageTag: promo-001
+        summarizeBy: none
+
+    column PromotionCode
+        dataType: string
+        lineageTag: promo-002
+        summarizeBy: none
+        annotation SynonymList = Offer Code, Deal Code
+
+    column PromotionName
+        dataType: string
+        lineageTag: promo-003
+        summarizeBy: none
+        annotation SynonymList = Offer Name, Deal Name
+
+    column PromotionType
+        dataType: string
+        lineageTag: promo-004
+        summarizeBy: none
+        annotation AllowedValues = BOGOF, Multibuy, Price Cut, Meal Deal, Clubcard Price, Loyalty Exclusive
+        annotation SynonymList = Mechanic, Offer Type
+
+    column PromotionMechanic
+        dataType: string
+        lineageTag: promo-005
+        summarizeBy: none
+        annotation Description = Detailed mechanic (e.g., "3 for £5", "50% off")
+
+    column StartDate
+        dataType: dateTime
+        lineageTag: promo-006
+        summarizeBy: none
+
+    column EndDate
+        dataType: dateTime
+        lineageTag: promo-007
+        summarizeBy: none
+
+    column FundedBy
+        dataType: string
+        lineageTag: promo-008
+        summarizeBy: none
+        annotation AllowedValues = Retailer, Supplier, Joint
+        annotation Description = Who funds the promotion
+
+    column IsNationalPromo
+        dataType: boolean
+        lineageTag: promo-009
+        summarizeBy: none
+
+    column DisplayLocation
+        dataType: string
+        lineageTag: promo-010
+        summarizeBy: none
+        annotation AllowedValues = Gondola End, Aisle, Checkout, Front of Store, In-Aisle
+        annotation SynonymList = Fixture, Position
+
+
+// ============================================================================
+// FACT TABLES
+// ============================================================================
+
+table fact_Sales
+    lineageTag: sales-fact-001
+    description: Point of sale transactions at basket/product level
+    
+    column SalesKey
+        dataType: int64
+        isKey: true
+        lineageTag: sales-001
+        summarizeBy: none
+
+    column DateKey
+        dataType: int64
+        lineageTag: sales-002
+        summarizeBy: none
+
+    column StoreKey
+        dataType: int64
+        lineageTag: sales-003
+        summarizeBy: none
+
+    column ProductKey
+        dataType: int64
+        lineageTag: sales-004
+        summarizeBy: none
+
+    column CustomerKey
+        dataType: int64
+        lineageTag: sales-005
+        summarizeBy: none
+
+    column PromotionKey
+        dataType: int64
+        lineageTag: sales-006
+        summarizeBy: none
+
+    column TransactionID
+        dataType: string
+        lineageTag: sales-007
+        summarizeBy: none
+        annotation SynonymList = Basket ID, Receipt Number, Till Receipt
+
+    column Quantity
+        dataType: int64
+        lineageTag: sales-008
+        summarizeBy: sum
+        annotation SynonymList = Units, Items Sold
+
+    column GrossSales
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: sales-009
+        summarizeBy: sum
+        annotation Description = Sales value before discounts
+        annotation SynonymList = Revenue, Gross Revenue
+
+    column DiscountAmount
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: sales-010
+        summarizeBy: sum
+        annotation SynonymList = Promo Discount, Savings
+
+    column NetSales
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: sales-011
+        summarizeBy: sum
+        annotation Description = Sales value after discounts
+        annotation SynonymList = Net Revenue, Actual Sales
+
+    column CostOfGoods
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: sales-012
+        summarizeBy: sum
+        annotation SynonymList = COGS, Cost Price, Landed Cost
+
+    column GrossProfit
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: sales-013
+        summarizeBy: sum
+        annotation SynonymList = Margin, GP
+
+    column VATAmount
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: sales-014
+        summarizeBy: sum
+
+    column PaymentMethod
+        dataType: string
+        lineageTag: sales-015
+        summarizeBy: none
+        annotation AllowedValues = Card, Cash, Contactless, Mobile Pay, Voucher
+
+    column IsOnlineOrder
+        dataType: boolean
+        lineageTag: sales-016
+        summarizeBy: none
+        annotation SynonymList = Ecommerce, Digital, Dotcom
+
+    column IsClickCollect
+        dataType: boolean
+        lineageTag: sales-017
+        summarizeBy: none
+        annotation SynonymList = C&C, BOPIS
+
+    // ========== CORE SALES MEASURES ==========
+    
+    measure TotalSales = SUM(fact_Sales[NetSales])
+        formatString: £#,0.00
+        lineageTag: sales-meas-001
+        annotation SynonymList = Total Revenue, Net Revenue, Total Net Sales
+
+    measure TotalUnits = SUM(fact_Sales[Quantity])
+        formatString: #,0
+        lineageTag: sales-meas-002
+        annotation SynonymList = Units Sold, Volume, Items Sold
+
+    measure TotalTransactions = DISTINCTCOUNT(fact_Sales[TransactionID])
+        formatString: #,0
+        lineageTag: sales-meas-003
+        annotation SynonymList = Basket Count, Transaction Count, Customer Count
+
+    measure AvgBasketValue = DIVIDE([TotalSales], [TotalTransactions], 0)
+        formatString: £#,0.00
+        lineageTag: sales-meas-004
+        annotation Description = Average transaction value
+        annotation SynonymList = ATV, Basket Size, Average Spend
+
+    measure UnitsPerTransaction = DIVIDE([TotalUnits], [TotalTransactions], 0)
+        formatString: #,0.0
+        lineageTag: sales-meas-005
+        annotation Description = Average units per basket
+        annotation SynonymList = UPT, Items Per Basket
+
+    measure AvgSellingPrice = DIVIDE([TotalSales], [TotalUnits], 0)
+        formatString: £#,0.00
+        lineageTag: sales-meas-006
+        annotation Description = Average selling price per unit
+        annotation SynonymList = ASP, Unit Price
+
+    // ========== PROFIT MEASURES ==========
+
+    measure TotalGrossProfit = SUM(fact_Sales[GrossProfit])
+        formatString: £#,0.00
+        lineageTag: sales-meas-007
+        annotation SynonymList = Total Margin, GP
+
+    measure GrossMarginPct = DIVIDE([TotalGrossProfit], [TotalSales], 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-008
+        annotation Description = Gross profit as percentage of sales
+        annotation SynonymList = Margin %, GP%
+
+    measure TotalCOGS = SUM(fact_Sales[CostOfGoods])
+        formatString: £#,0.00
+        lineageTag: sales-meas-009
+        annotation SynonymList = Cost of Sales, Cost of Goods Sold
+
+    // ========== PROMOTIONAL MEASURES ==========
+
+    measure TotalDiscount = SUM(fact_Sales[DiscountAmount])
+        formatString: £#,0.00
+        lineageTag: sales-meas-010
+        annotation SynonymList = Promo Cost, Discount Value
+
+    measure DiscountRate = DIVIDE([TotalDiscount], SUM(fact_Sales[GrossSales]), 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-011
+        annotation Description = Discount as percentage of gross sales
+        annotation SynonymList = Promo Rate, Markdown Rate
+
+    measure PromoSales = CALCULATE([TotalSales], fact_Sales[PromotionKey] <> 0)
+        formatString: £#,0.00
+        lineageTag: sales-meas-012
+        annotation Description = Sales on promoted items
+        annotation SynonymList = Promotional Sales, Deal Sales
+
+    measure PromoSalesPct = DIVIDE([PromoSales], [TotalSales], 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-013
+        annotation Description = Percentage of sales from promotions
+        annotation SynonymList = Promo Mix, Deal Penetration
+
+    // ========== LIKE-FOR-LIKE (COMP) MEASURES ==========
+
+    measure LFLSales = CALCULATE([TotalSales], dim_Store[IsComparable] = TRUE)
+        formatString: £#,0.00
+        lineageTag: sales-meas-014
+        annotation Description = Sales from comparable stores only
+        annotation SynonymList = Like-for-Like Sales, Comp Sales, Same Store Sales
+
+    measure LFLSalesLY = CALCULATE([LFLSales], SAMEPERIODLASTYEAR(dim_Date[Date]))
+        formatString: £#,0.00
+        lineageTag: sales-meas-015
+        annotation Description = Like-for-like sales same period last year
+        annotation SynonymList = LFL LY, Comp LY
+
+    measure LFLGrowth = DIVIDE([LFLSales] - [LFLSalesLY], [LFLSalesLY], 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-016
+        annotation Description = Like-for-like sales growth vs last year
+        annotation SynonymList = LFL Growth, Comp Growth, Same Store Growth
+
+    // ========== YEAR-OVER-YEAR MEASURES ==========
+
+    measure SalesLY = CALCULATE([TotalSales], SAMEPERIODLASTYEAR(dim_Date[Date]))
+        formatString: £#,0.00
+        lineageTag: sales-meas-017
+        annotation SynonymList = Sales Last Year, Prior Year Sales
+
+    measure SalesGrowth = DIVIDE([TotalSales] - [SalesLY], [SalesLY], 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-018
+        annotation Description = Total sales growth vs last year
+        annotation SynonymList = YoY Growth, Sales Variance
+
+    // ========== CHANNEL MEASURES ==========
+
+    measure OnlineSales = CALCULATE([TotalSales], fact_Sales[IsOnlineOrder] = TRUE)
+        formatString: £#,0.00
+        lineageTag: sales-meas-019
+        annotation SynonymList = Ecommerce Sales, Digital Sales, Dotcom Sales
+
+    measure OnlineSalesPct = DIVIDE([OnlineSales], [TotalSales], 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-020
+        annotation Description = Online as percentage of total sales
+        annotation SynonymList = Online Mix, Digital Penetration
+
+    // ========== CATEGORY MEASURES ==========
+
+    measure OwnLabelSales = CALCULATE([TotalSales], dim_Product[IsOwnLabel] = TRUE)
+        formatString: £#,0.00
+        lineageTag: sales-meas-021
+        annotation SynonymList = Private Label Sales, Own Brand Sales
+
+    measure OwnLabelMix = DIVIDE([OwnLabelSales], [TotalSales], 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-022
+        annotation Description = Own label share of total sales
+        annotation SynonymList = Private Label Mix, Own Brand Penetration
+
+
+table fact_Inventory
+    lineageTag: inv-fact-001
+    description: Daily inventory snapshot by store/product
+    
+    column InventoryKey
+        dataType: int64
+        isKey: true
+        lineageTag: inv-001
+        summarizeBy: none
+
+    column DateKey
+        dataType: int64
+        lineageTag: inv-002
+        summarizeBy: none
+
+    column StoreKey
+        dataType: int64
+        lineageTag: inv-003
+        summarizeBy: none
+
+    column ProductKey
+        dataType: int64
+        lineageTag: inv-004
+        summarizeBy: none
+
+    column OnHandQty
+        dataType: int64
+        lineageTag: inv-005
+        summarizeBy: sum
+        annotation Description = Quantity on hand at end of day
+        annotation SynonymList = Stock On Hand, SOH, Inventory Level
+
+    column OnHandValue
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: inv-006
+        summarizeBy: sum
+        annotation Description = Value of stock on hand at cost
+        annotation SynonymList = Stock Value, Inventory Value
+
+    column OnOrderQty
+        dataType: int64
+        lineageTag: inv-007
+        summarizeBy: sum
+        annotation Description = Quantity on order from supplier
+        annotation SynonymList = In Transit, Pipeline Stock
+
+    column MinStockLevel
+        dataType: int64
+        lineageTag: inv-008
+        summarizeBy: none
+        annotation Description = Minimum stock level (reorder point)
+        annotation SynonymList = Reorder Point, Safety Stock
+
+    column MaxStockLevel
+        dataType: int64
+        lineageTag: inv-009
+        summarizeBy: none
+        annotation Description = Maximum stock capacity
+        annotation SynonymList = Par Level, Max Stock
+
+    column IsOutOfStock
+        dataType: boolean
+        lineageTag: inv-010
+        summarizeBy: none
+        annotation Description = True if on-hand qty is zero
+        annotation SynonymList = OOS, Zero Stock
+
+    column DaysOfSupply
+        dataType: decimal
+        lineageTag: inv-011
+        summarizeBy: average
+        annotation Description = Days of stock based on average sales rate
+        annotation SynonymList = DOS, Weeks Cover, Stock Cover
+
+    // ========== INVENTORY MEASURES ==========
+
+    measure TotalStockOnHand = SUM(fact_Inventory[OnHandQty])
+        formatString: #,0
+        lineageTag: inv-meas-001
+        annotation SynonymList = Total Inventory, Stock Units
+
+    measure TotalStockValue = SUM(fact_Inventory[OnHandValue])
+        formatString: £#,0.00
+        lineageTag: inv-meas-002
+        annotation SynonymList = Inventory Value, Stock at Cost
+
+    measure OOSCount = CALCULATE(COUNTROWS(fact_Inventory), fact_Inventory[IsOutOfStock] = TRUE)
+        formatString: #,0
+        lineageTag: inv-meas-003
+        annotation Description = Count of out-of-stock SKU/store combinations
+        annotation SynonymList = Out of Stock Count, OOS Items
+
+    measure InStockRate = 1 - DIVIDE([OOSCount], COUNTROWS(fact_Inventory), 0)
+        formatString: 0.0%
+        lineageTag: inv-meas-004
+        annotation Description = Percentage of SKUs in stock
+        annotation SynonymList = Availability, On Shelf Availability, OSA
+
+    measure AvgDaysOfSupply = AVERAGE(fact_Inventory[DaysOfSupply])
+        formatString: #,0.0
+        lineageTag: inv-meas-005
+        annotation SynonymList = Avg Stock Cover, Avg DOS
+
+    measure StockTurn = DIVIDE([TotalCOGS] * 365, [TotalStockValue], 0)
+        formatString: #,0.0
+        lineageTag: inv-meas-006
+        annotation Description = Inventory turnover (times per year)
+        annotation SynonymList = Inventory Turns, Stock Turn Rate, ITR
+
+    measure GMROI = DIVIDE([TotalGrossProfit], [TotalStockValue], 0)
+        formatString: £#,0.00
+        lineageTag: inv-meas-007
+        annotation Description = Gross Margin Return on Inventory Investment
+        annotation SynonymList = GMROII, Return on Inventory
+
+
+table fact_Waste
+    lineageTag: waste-fact-001
+    description: Product waste, shrinkage, and markdowns
+    
+    column WasteKey
+        dataType: int64
+        isKey: true
+        lineageTag: waste-001
+        summarizeBy: none
+
+    column DateKey
+        dataType: int64
+        lineageTag: waste-002
+        summarizeBy: none
+
+    column StoreKey
+        dataType: int64
+        lineageTag: waste-003
+        summarizeBy: none
+
+    column ProductKey
+        dataType: int64
+        lineageTag: waste-004
+        summarizeBy: none
+
+    column WasteType
+        dataType: string
+        lineageTag: waste-005
+        summarizeBy: none
+        annotation AllowedValues = Expired, Damaged, Theft, Admin Error, Markdown
+        annotation SynonymList = Loss Type, Shrinkage Type
+
+    column WasteQty
+        dataType: int64
+        lineageTag: waste-006
+        summarizeBy: sum
+        annotation SynonymList = Loss Units, Shrink Qty
+
+    column WasteValueCost
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: waste-007
+        summarizeBy: sum
+        annotation Description = Value of waste at cost price
+        annotation SynonymList = Loss Value, Shrinkage Value
+
+    column WasteValueRetail
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: waste-008
+        summarizeBy: sum
+        annotation Description = Value of waste at retail price
+
+    // ========== WASTE MEASURES ==========
+
+    measure TotalWasteValue = SUM(fact_Waste[WasteValueCost])
+        formatString: £#,0.00
+        lineageTag: waste-meas-001
+        annotation SynonymList = Total Shrinkage, Total Loss
+
+    measure WasteRate = DIVIDE([TotalWasteValue], [TotalSales], 0)
+        formatString: 0.00%
+        lineageTag: waste-meas-002
+        annotation Description = Waste as percentage of sales
+        annotation SynonymList = Shrinkage Rate, Loss Rate
+
+    measure FoodWaste = CALCULATE([TotalWasteValue], fact_Waste[WasteType] = "Expired")
+        formatString: £#,0.00
+        lineageTag: waste-meas-003
+        annotation Description = Waste from expired products
+        annotation SynonymList = Spoilage, Date Code Waste
+
+    measure TheftLoss = CALCULATE([TotalWasteValue], fact_Waste[WasteType] = "Theft")
+        formatString: £#,0.00
+        lineageTag: waste-meas-004
+        annotation Description = Estimated theft/shrinkage loss
+        annotation SynonymList = Shrinkage, External Loss
+
+
+table fact_Footfall
+    lineageTag: foot-fact-001
+    description: Store traffic/customer footfall counts
+    
+    column FootfallKey
+        dataType: int64
+        isKey: true
+        lineageTag: foot-001
+        summarizeBy: none
+
+    column DateKey
+        dataType: int64
+        lineageTag: foot-002
+        summarizeBy: none
+
+    column StoreKey
+        dataType: int64
+        lineageTag: foot-003
+        summarizeBy: none
+
+    column HourOfDay
+        dataType: int64
+        lineageTag: foot-004
+        summarizeBy: none
+
+    column FootfallCount
+        dataType: int64
+        lineageTag: foot-005
+        summarizeBy: sum
+        annotation Description = Number of customers entering store
+        annotation SynonymList = Traffic, Visitors, Customer Count
+
+    // ========== FOOTFALL MEASURES ==========
+
+    measure TotalFootfall = SUM(fact_Footfall[FootfallCount])
+        formatString: #,0
+        lineageTag: foot-meas-001
+        annotation SynonymList = Total Traffic, Total Visitors
+
+    measure ConversionRate = DIVIDE([TotalTransactions], [TotalFootfall], 0)
+        formatString: 0.0%
+        lineageTag: foot-meas-002
+        annotation Description = Percentage of visitors who made a purchase
+        annotation SynonymList = Conversion, Browse to Buy Rate
+
+    measure SalesPerVisitor = DIVIDE([TotalSales], [TotalFootfall], 0)
+        formatString: £#,0.00
+        lineageTag: foot-meas-003
+        annotation SynonymList = Revenue Per Visitor
+
+
+// ============================================================================
+// RELATIONSHIPS
+// ============================================================================
+
+relationship Sales_to_Date
+    fromColumn: fact_Sales.DateKey
+    toColumn: dim_Date.DateKey
+    crossFilteringBehavior: singleDirection
+
+relationship Sales_to_Store
+    fromColumn: fact_Sales.StoreKey
+    toColumn: dim_Store.StoreKey
+    crossFilteringBehavior: singleDirection
+
+relationship Sales_to_Product
+    fromColumn: fact_Sales.ProductKey
+    toColumn: dim_Product.ProductKey
+    crossFilteringBehavior: singleDirection
+
+relationship Sales_to_Customer
+    fromColumn: fact_Sales.CustomerKey
+    toColumn: dim_Customer.CustomerKey
+    crossFilteringBehavior: singleDirection
+
+relationship Sales_to_Promotion
+    fromColumn: fact_Sales.PromotionKey
+    toColumn: dim_Promotion.PromotionKey
+    crossFilteringBehavior: singleDirection
+
+relationship Inventory_to_Date
+    fromColumn: fact_Inventory.DateKey
+    toColumn: dim_Date.DateKey
+    crossFilteringBehavior: singleDirection
+
+relationship Inventory_to_Store
+    fromColumn: fact_Inventory.StoreKey
+    toColumn: dim_Store.StoreKey
+    crossFilteringBehavior: singleDirection
+
+relationship Inventory_to_Product
+    fromColumn: fact_Inventory.ProductKey
+    toColumn: dim_Product.ProductKey
+    crossFilteringBehavior: singleDirection
+
+relationship Waste_to_Date
+    fromColumn: fact_Waste.DateKey
+    toColumn: dim_Date.DateKey
+    crossFilteringBehavior: singleDirection
+
+relationship Waste_to_Store
+    fromColumn: fact_Waste.StoreKey
+    toColumn: dim_Store.StoreKey
+    crossFilteringBehavior: singleDirection
+
+relationship Waste_to_Product
+    fromColumn: fact_Waste.ProductKey
+    toColumn: dim_Product.ProductKey
+    crossFilteringBehavior: singleDirection
+
+relationship Footfall_to_Date
+    fromColumn: fact_Footfall.DateKey
+    toColumn: dim_Date.DateKey
+    crossFilteringBehavior: singleDirection
+
+relationship Footfall_to_Store
+    fromColumn: fact_Footfall.StoreKey
+    toColumn: dim_Store.StoreKey
+    crossFilteringBehavior: singleDirection
+
+
+// NATIONAL GROCERY RETAILER - POWER BI SEMANTIC MODEL
+// Inspired by Tesco/Sainsbury's/M&S analytics patterns
+// ============================================================================
+// This model represents a simplified but realistic view of a UK grocery
+// retailer's analytics layer covering: Sales, Inventory, Customer, Promotions
+// ============================================================================
+
+model Retail_Analytics_Enterprise
+    culture: en-GB
+    defaultPowerBIDataSourceVersion: powerBI_V3
+
+// ============================================================================
+// DIMENSION TABLES
+// ============================================================================
+
+table dim_Product
+    lineageTag: prod-dim-001
+    description: Master product dimension with full hierarchy
+    
+    column ProductKey
+        dataType: int64
+        isKey: true
+        lineageTag: prod-001
+        summarizeBy: none
+
+    column SKU
+        dataType: string
+        lineageTag: prod-002
+        summarizeBy: none
+        annotation Description = Stock Keeping Unit - unique product identifier
+
+    column ProductName
+        dataType: string
+        lineageTag: prod-003
+        summarizeBy: none
+
+    column Barcode
+        dataType: string
+        lineageTag: prod-004
+        summarizeBy: none
+        annotation SynonymList = EAN, GTIN, UPC
+
+    column CategoryL1
+        dataType: string
+        lineageTag: prod-005
+        summarizeBy: none
+        annotation Description = Top level category (e.g., Fresh, Ambient, Frozen)
+        annotation SynonymList = Department, Division
+
+    column CategoryL2
+        dataType: string
+        lineageTag: prod-006
+        summarizeBy: none
+        annotation Description = Sub-category (e.g., Dairy, Bakery, Meat)
+        annotation SynonymList = Category, Aisle
+
+    column CategoryL3
+        dataType: string
+        lineageTag: prod-007
+        summarizeBy: none
+        annotation Description = Product group (e.g., Milk, Cheese, Yogurt)
+        annotation SynonymList = Sub-category, Segment
+
+    column Brand
+        dataType: string
+        lineageTag: prod-008
+        summarizeBy: none
+
+    column IsOwnLabel
+        dataType: boolean
+        lineageTag: prod-009
+        summarizeBy: none
+        annotation Description = True if private label/own brand product
+        annotation SynonymList = Private Label, Store Brand, Own Brand
+
+    column Supplier
+        dataType: string
+        lineageTag: prod-010
+        summarizeBy: none
+
+    column UnitSize
+        dataType: string
+        lineageTag: prod-011
+        summarizeBy: none
+        annotation Description = Pack size (e.g., 500ml, 1kg)
+
+    column ShelfLife_Days
+        dataType: int64
+        lineageTag: prod-012
+        summarizeBy: average
+        annotation Description = Product shelf life in days
+
+    column IsChilled
+        dataType: boolean
+        lineageTag: prod-013
+        summarizeBy: none
+
+    column IsFrozen
+        dataType: boolean
+        lineageTag: prod-014
+        summarizeBy: none
+
+    column VATRate
+        dataType: decimal
+        lineageTag: prod-015
+        summarizeBy: none
+        annotation Description = VAT rate (0% for most food, 20% for non-food)
+
+    hierarchy ProductHierarchy
+        level CategoryL1
+        level CategoryL2
+        level CategoryL3
+        level Brand
+        level ProductName
+
+
+table dim_Store
+    lineageTag: store-dim-001
+    description: Store/location master dimension
+    
+    column StoreKey
+        dataType: int64
+        isKey: true
+        lineageTag: store-001
+        summarizeBy: none
+
+    column StoreCode
+        dataType: string
+        lineageTag: store-002
+        summarizeBy: none
+        annotation SynonymList = Store Number, Branch Code
+
+    column StoreName
+        dataType: string
+        lineageTag: store-003
+        summarizeBy: none
+        annotation SynonymList = Branch Name, Location
+
+    column StoreFormat
+        dataType: string
+        lineageTag: store-004
+        summarizeBy: none
+        annotation Description = Store format type
+        annotation AllowedValues = Extra, Superstore, Metro, Express, Local, Convenience
+
+    column Region
+        dataType: string
+        lineageTag: store-005
+        summarizeBy: none
+        annotation SynonymList = Area, Territory
+
+    column District
+        dataType: string
+        lineageTag: store-006
+        summarizeBy: none
+
+    column PostCode
+        dataType: string
+        lineageTag: store-007
+        summarizeBy: none
+
+    column City
+        dataType: string
+        lineageTag: store-008
+        summarizeBy: none
+        annotation SynonymList = Town
+
+    column Country
+        dataType: string
+        lineageTag: store-009
+        summarizeBy: none
+
+    column SqFt_SalesFloor
+        dataType: int64
+        lineageTag: store-010
+        summarizeBy: sum
+        annotation Description = Sales floor square footage
+        annotation SynonymList = Selling Space, Floor Space
+
+    column OpenDate
+        dataType: dateTime
+        lineageTag: store-011
+        summarizeBy: none
+
+    column ManagerName
+        dataType: string
+        lineageTag: store-012
+        summarizeBy: none
+
+    column HasPharmacy
+        dataType: boolean
+        lineageTag: store-013
+        summarizeBy: none
+
+    column HasPetrolStation
+        dataType: boolean
+        lineageTag: store-014
+        summarizeBy: none
+        annotation SynonymList = Has Fuel Station, Has Forecourt
+
+    column HasClickCollect
+        dataType: boolean
+        lineageTag: store-015
+        summarizeBy: none
+        annotation SynonymList = Has C&C, BOPIS
+
+    column IsComparable
+        dataType: boolean
+        lineageTag: store-016
+        summarizeBy: none
+        annotation Description = Included in like-for-like calculations (open > 1 year)
+        annotation SynonymList = LFL Store, Comp Store
+
+    hierarchy StoreHierarchy
+        level Country
+        level Region
+        level District
+        level StoreName
+
+
+table dim_Date
+    lineageTag: date-dim-001
+    description: Standard date dimension with retail calendar
+    
+    column DateKey
+        dataType: int64
+        isKey: true
+        lineageTag: date-001
+        summarizeBy: none
+
+    column Date
+        dataType: dateTime
+        formatString: dd/MM/yyyy
+        lineageTag: date-002
+        summarizeBy: none
+
+    column DayOfWeek
+        dataType: string
+        lineageTag: date-003
+        summarizeBy: none
+
+    column DayOfWeekNum
+        dataType: int64
+        lineageTag: date-004
+        summarizeBy: none
+
+    column WeekNum
+        dataType: int64
+        lineageTag: date-005
+        summarizeBy: none
+        annotation Description = ISO week number
+
+    column WeekEnding
+        dataType: dateTime
+        lineageTag: date-006
+        summarizeBy: none
+        annotation Description = Week ending Saturday (retail standard)
+
+    column MonthName
+        dataType: string
+        lineageTag: date-007
+        summarizeBy: none
+
+    column MonthNum
+        dataType: int64
+        lineageTag: date-008
+        summarizeBy: none
+
+    column Quarter
+        dataType: string
+        lineageTag: date-009
+        summarizeBy: none
+
+    column FiscalYear
+        dataType: int64
+        lineageTag: date-010
+        summarizeBy: none
+        annotation Description = Fiscal year (retailers often end in Feb/March)
+
+    column FiscalPeriod
+        dataType: int64
+        lineageTag: date-011
+        summarizeBy: none
+        annotation Description = 4-4-5 retail fiscal period
+
+    column IsWeekend
+        dataType: boolean
+        lineageTag: date-012
+        summarizeBy: none
+
+    column IsBankHoliday
+        dataType: boolean
+        lineageTag: date-013
+        summarizeBy: none
+
+    column IsChristmasPeriod
+        dataType: boolean
+        lineageTag: date-014
+        summarizeBy: none
+        annotation Description = Golden Quarter (Oct-Dec)
+
+    column IsEaster
+        dataType: boolean
+        lineageTag: date-015
+        summarizeBy: none
+
+    hierarchy DateHierarchy
+        level FiscalYear
+        level Quarter
+        level MonthName
+        level WeekEnding
+        level Date
+
+
+table dim_Customer
+    lineageTag: cust-dim-001
+    description: Customer/loyalty dimension (Clubcard/Nectar equivalent)
+    
+    column CustomerKey
+        dataType: int64
+        isKey: true
+        lineageTag: cust-001
+        summarizeBy: none
+
+    column LoyaltyCardNumber
+        dataType: string
+        lineageTag: cust-002
+        summarizeBy: none
+        annotation SynonymList = Clubcard Number, Nectar Number, Loyalty ID
+
+    column CustomerSegment
+        dataType: string
+        lineageTag: cust-003
+        summarizeBy: none
+        annotation Description = Customer value segment
+        annotation AllowedValues = Premium, Core, Occasional, Lapsed, New
+        annotation SynonymList = Value Tier, Customer Tier
+
+    column LifestyleSegment
+        dataType: string
+        lineageTag: cust-004
+        summarizeBy: none
+        annotation Description = Lifestyle/demographic segment
+        annotation AllowedValues = Family, Young Professional, Retiree, Health Conscious, Budget Shopper, Foodie
+        annotation SynonymList = Demographics, Customer Type
+
+    column JoinDate
+        dataType: dateTime
+        lineageTag: cust-005
+        summarizeBy: none
+
+    column PostCodeArea
+        dataType: string
+        lineageTag: cust-006
+        summarizeBy: none
+        annotation Description = First part of postcode for geo analysis
+
+    column PreferredStore
+        dataType: string
+        lineageTag: cust-007
+        summarizeBy: none
+
+    column HasDeliveryPass
+        dataType: boolean
+        lineageTag: cust-008
+        summarizeBy: none
+        annotation SynonymList = Delivery Saver, Unlimited Delivery
+
+    column TotalLifetimeSpend
+        dataType: decimal
+        lineageTag: cust-009
+        summarizeBy: sum
+        annotation SynonymList = CLV, Customer Lifetime Value
+
+    column AvgBasketValue
+        dataType: decimal
+        lineageTag: cust-010
+        summarizeBy: average
+        annotation SynonymList = ATV, Average Transaction Value
+
+    column ShopFrequency
+        dataType: string
+        lineageTag: cust-011
+        summarizeBy: none
+        annotation AllowedValues = Weekly, Fortnightly, Monthly, Occasional
+
+
+table dim_Promotion
+    lineageTag: promo-dim-001
+    description: Promotion/offer master dimension
+    
+    column PromotionKey
+        dataType: int64
+        isKey: true
+        lineageTag: promo-001
+        summarizeBy: none
+
+    column PromotionCode
+        dataType: string
+        lineageTag: promo-002
+        summarizeBy: none
+        annotation SynonymList = Offer Code, Deal Code
+
+    column PromotionName
+        dataType: string
+        lineageTag: promo-003
+        summarizeBy: none
+        annotation SynonymList = Offer Name, Deal Name
+
+    column PromotionType
+        dataType: string
+        lineageTag: promo-004
+        summarizeBy: none
+        annotation AllowedValues = BOGOF, Multibuy, Price Cut, Meal Deal, Clubcard Price, Loyalty Exclusive
+        annotation SynonymList = Mechanic, Offer Type
+
+    column PromotionMechanic
+        dataType: string
+        lineageTag: promo-005
+        summarizeBy: none
+        annotation Description = Detailed mechanic (e.g., "3 for £5", "50% off")
+
+    column StartDate
+        dataType: dateTime
+        lineageTag: promo-006
+        summarizeBy: none
+
+    column EndDate
+        dataType: dateTime
+        lineageTag: promo-007
+        summarizeBy: none
+
+    column FundedBy
+        dataType: string
+        lineageTag: promo-008
+        summarizeBy: none
+        annotation AllowedValues = Retailer, Supplier, Joint
+        annotation Description = Who funds the promotion
+
+    column IsNationalPromo
+        dataType: boolean
+        lineageTag: promo-009
+        summarizeBy: none
+
+    column DisplayLocation
+        dataType: string
+        lineageTag: promo-010
+        summarizeBy: none
+        annotation AllowedValues = Gondola End, Aisle, Checkout, Front of Store, In-Aisle
+        annotation SynonymList = Fixture, Position
+
+
+// ============================================================================
+// FACT TABLES
+// ============================================================================
+
+table fact_Sales
+    lineageTag: sales-fact-001
+    description: Point of sale transactions at basket/product level
+    
+    column SalesKey
+        dataType: int64
+        isKey: true
+        lineageTag: sales-001
+        summarizeBy: none
+
+    column DateKey
+        dataType: int64
+        lineageTag: sales-002
+        summarizeBy: none
+
+    column StoreKey
+        dataType: int64
+        lineageTag: sales-003
+        summarizeBy: none
+
+    column ProductKey
+        dataType: int64
+        lineageTag: sales-004
+        summarizeBy: none
+
+    column CustomerKey
+        dataType: int64
+        lineageTag: sales-005
+        summarizeBy: none
+
+    column PromotionKey
+        dataType: int64
+        lineageTag: sales-006
+        summarizeBy: none
+
+    column TransactionID
+        dataType: string
+        lineageTag: sales-007
+        summarizeBy: none
+        annotation SynonymList = Basket ID, Receipt Number, Till Receipt
+
+    column Quantity
+        dataType: int64
+        lineageTag: sales-008
+        summarizeBy: sum
+        annotation SynonymList = Units, Items Sold
+
+    column GrossSales
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: sales-009
+        summarizeBy: sum
+        annotation Description = Sales value before discounts
+        annotation SynonymList = Revenue, Gross Revenue
+
+    column DiscountAmount
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: sales-010
+        summarizeBy: sum
+        annotation SynonymList = Promo Discount, Savings
+
+    column NetSales
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: sales-011
+        summarizeBy: sum
+        annotation Description = Sales value after discounts
+        annotation SynonymList = Net Revenue, Actual Sales
+
+    column CostOfGoods
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: sales-012
+        summarizeBy: sum
+        annotation SynonymList = COGS, Cost Price, Landed Cost
+
+    column GrossProfit
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: sales-013
+        summarizeBy: sum
+        annotation SynonymList = Margin, GP
+
+    column VATAmount
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: sales-014
+        summarizeBy: sum
+
+    column PaymentMethod
+        dataType: string
+        lineageTag: sales-015
+        summarizeBy: none
+        annotation AllowedValues = Card, Cash, Contactless, Mobile Pay, Voucher
+
+    column IsOnlineOrder
+        dataType: boolean
+        lineageTag: sales-016
+        summarizeBy: none
+        annotation SynonymList = Ecommerce, Digital, Dotcom
+
+    column IsClickCollect
+        dataType: boolean
+        lineageTag: sales-017
+        summarizeBy: none
+        annotation SynonymList = C&C, BOPIS
+
+    // ========== CORE SALES MEASURES ==========
+    
+    measure TotalSales = SUM(fact_Sales[NetSales])
+        formatString: £#,0.00
+        lineageTag: sales-meas-001
+        annotation SynonymList = Total Revenue, Net Revenue, Total Net Sales
+
+    measure TotalUnits = SUM(fact_Sales[Quantity])
+        formatString: #,0
+        lineageTag: sales-meas-002
+        annotation SynonymList = Units Sold, Volume, Items Sold
+
+    measure TotalTransactions = DISTINCTCOUNT(fact_Sales[TransactionID])
+        formatString: #,0
+        lineageTag: sales-meas-003
+        annotation SynonymList = Basket Count, Transaction Count, Customer Count
+
+    measure AvgBasketValue = DIVIDE([TotalSales], [TotalTransactions], 0)
+        formatString: £#,0.00
+        lineageTag: sales-meas-004
+        annotation Description = Average transaction value
+        annotation SynonymList = ATV, Basket Size, Average Spend
+
+    measure UnitsPerTransaction = DIVIDE([TotalUnits], [TotalTransactions], 0)
+        formatString: #,0.0
+        lineageTag: sales-meas-005
+        annotation Description = Average units per basket
+        annotation SynonymList = UPT, Items Per Basket
+
+    measure AvgSellingPrice = DIVIDE([TotalSales], [TotalUnits], 0)
+        formatString: £#,0.00
+        lineageTag: sales-meas-006
+        annotation Description = Average selling price per unit
+        annotation SynonymList = ASP, Unit Price
+
+    // ========== PROFIT MEASURES ==========
+
+    measure TotalGrossProfit = SUM(fact_Sales[GrossProfit])
+        formatString: £#,0.00
+        lineageTag: sales-meas-007
+        annotation SynonymList = Total Margin, GP
+
+    measure GrossMarginPct = DIVIDE([TotalGrossProfit], [TotalSales], 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-008
+        annotation Description = Gross profit as percentage of sales
+        annotation SynonymList = Margin %, GP%
+
+    measure TotalCOGS = SUM(fact_Sales[CostOfGoods])
+        formatString: £#,0.00
+        lineageTag: sales-meas-009
+        annotation SynonymList = Cost of Sales, Cost of Goods Sold
+
+    // ========== PROMOTIONAL MEASURES ==========
+
+    measure TotalDiscount = SUM(fact_Sales[DiscountAmount])
+        formatString: £#,0.00
+        lineageTag: sales-meas-010
+        annotation SynonymList = Promo Cost, Discount Value
+
+    measure DiscountRate = DIVIDE([TotalDiscount], SUM(fact_Sales[GrossSales]), 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-011
+        annotation Description = Discount as percentage of gross sales
+        annotation SynonymList = Promo Rate, Markdown Rate
+
+    measure PromoSales = CALCULATE([TotalSales], fact_Sales[PromotionKey] <> 0)
+        formatString: £#,0.00
+        lineageTag: sales-meas-012
+        annotation Description = Sales on promoted items
+        annotation SynonymList = Promotional Sales, Deal Sales
+
+    measure PromoSalesPct = DIVIDE([PromoSales], [TotalSales], 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-013
+        annotation Description = Percentage of sales from promotions
+        annotation SynonymList = Promo Mix, Deal Penetration
+
+    // ========== LIKE-FOR-LIKE (COMP) MEASURES ==========
+
+    measure LFLSales = CALCULATE([TotalSales], dim_Store[IsComparable] = TRUE)
+        formatString: £#,0.00
+        lineageTag: sales-meas-014
+        annotation Description = Sales from comparable stores only
+        annotation SynonymList = Like-for-Like Sales, Comp Sales, Same Store Sales
+
+    measure LFLSalesLY = CALCULATE([LFLSales], SAMEPERIODLASTYEAR(dim_Date[Date]))
+        formatString: £#,0.00
+        lineageTag: sales-meas-015
+        annotation Description = Like-for-like sales same period last year
+        annotation SynonymList = LFL LY, Comp LY
+
+    measure LFLGrowth = DIVIDE([LFLSales] - [LFLSalesLY], [LFLSalesLY], 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-016
+        annotation Description = Like-for-like sales growth vs last year
+        annotation SynonymList = LFL Growth, Comp Growth, Same Store Growth
+
+    // ========== YEAR-OVER-YEAR MEASURES ==========
+
+    measure SalesLY = CALCULATE([TotalSales], SAMEPERIODLASTYEAR(dim_Date[Date]))
+        formatString: £#,0.00
+        lineageTag: sales-meas-017
+        annotation SynonymList = Sales Last Year, Prior Year Sales
+
+    measure SalesGrowth = DIVIDE([TotalSales] - [SalesLY], [SalesLY], 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-018
+        annotation Description = Total sales growth vs last year
+        annotation SynonymList = YoY Growth, Sales Variance
+
+    // ========== CHANNEL MEASURES ==========
+
+    measure OnlineSales = CALCULATE([TotalSales], fact_Sales[IsOnlineOrder] = TRUE)
+        formatString: £#,0.00
+        lineageTag: sales-meas-019
+        annotation SynonymList = Ecommerce Sales, Digital Sales, Dotcom Sales
+
+    measure OnlineSalesPct = DIVIDE([OnlineSales], [TotalSales], 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-020
+        annotation Description = Online as percentage of total sales
+        annotation SynonymList = Online Mix, Digital Penetration
+
+    // ========== CATEGORY MEASURES ==========
+
+    measure OwnLabelSales = CALCULATE([TotalSales], dim_Product[IsOwnLabel] = TRUE)
+        formatString: £#,0.00
+        lineageTag: sales-meas-021
+        annotation SynonymList = Private Label Sales, Own Brand Sales
+
+    measure OwnLabelMix = DIVIDE([OwnLabelSales], [TotalSales], 0)
+        formatString: 0.0%
+        lineageTag: sales-meas-022
+        annotation Description = Own label share of total sales
+        annotation SynonymList = Private Label Mix, Own Brand Penetration
+
+
+table fact_Inventory
+    lineageTag: inv-fact-001
+    description: Daily inventory snapshot by store/product
+    
+    column InventoryKey
+        dataType: int64
+        isKey: true
+        lineageTag: inv-001
+        summarizeBy: none
+
+    column DateKey
+        dataType: int64
+        lineageTag: inv-002
+        summarizeBy: none
+
+    column StoreKey
+        dataType: int64
+        lineageTag: inv-003
+        summarizeBy: none
+
+    column ProductKey
+        dataType: int64
+        lineageTag: inv-004
+        summarizeBy: none
+
+    column OnHandQty
+        dataType: int64
+        lineageTag: inv-005
+        summarizeBy: sum
+        annotation Description = Quantity on hand at end of day
+        annotation SynonymList = Stock On Hand, SOH, Inventory Level
+
+    column OnHandValue
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: inv-006
+        summarizeBy: sum
+        annotation Description = Value of stock on hand at cost
+        annotation SynonymList = Stock Value, Inventory Value
+
+    column OnOrderQty
+        dataType: int64
+        lineageTag: inv-007
+        summarizeBy: sum
+        annotation Description = Quantity on order from supplier
+        annotation SynonymList = In Transit, Pipeline Stock
+
+    column MinStockLevel
+        dataType: int64
+        lineageTag: inv-008
+        summarizeBy: none
+        annotation Description = Minimum stock level (reorder point)
+        annotation SynonymList = Reorder Point, Safety Stock
+
+    column MaxStockLevel
+        dataType: int64
+        lineageTag: inv-009
+        summarizeBy: none
+        annotation Description = Maximum stock capacity
+        annotation SynonymList = Par Level, Max Stock
+
+    column IsOutOfStock
+        dataType: boolean
+        lineageTag: inv-010
+        summarizeBy: none
+        annotation Description = True if on-hand qty is zero
+        annotation SynonymList = OOS, Zero Stock
+
+    column DaysOfSupply
+        dataType: decimal
+        lineageTag: inv-011
+        summarizeBy: average
+        annotation Description = Days of stock based on average sales rate
+        annotation SynonymList = DOS, Weeks Cover, Stock Cover
+
+    // ========== INVENTORY MEASURES ==========
+
+    measure TotalStockOnHand = SUM(fact_Inventory[OnHandQty])
+        formatString: #,0
+        lineageTag: inv-meas-001
+        annotation SynonymList = Total Inventory, Stock Units
+
+    measure TotalStockValue = SUM(fact_Inventory[OnHandValue])
+        formatString: £#,0.00
+        lineageTag: inv-meas-002
+        annotation SynonymList = Inventory Value, Stock at Cost
+
+    measure OOSCount = CALCULATE(COUNTROWS(fact_Inventory), fact_Inventory[IsOutOfStock] = TRUE)
+        formatString: #,0
+        lineageTag: inv-meas-003
+        annotation Description = Count of out-of-stock SKU/store combinations
+        annotation SynonymList = Out of Stock Count, OOS Items
+
+    measure InStockRate = 1 - DIVIDE([OOSCount], COUNTROWS(fact_Inventory), 0)
+        formatString: 0.0%
+        lineageTag: inv-meas-004
+        annotation Description = Percentage of SKUs in stock
+        annotation SynonymList = Availability, On Shelf Availability, OSA
+
+    measure AvgDaysOfSupply = AVERAGE(fact_Inventory[DaysOfSupply])
+        formatString: #,0.0
+        lineageTag: inv-meas-005
+        annotation SynonymList = Avg Stock Cover, Avg DOS
+
+    measure StockTurn = DIVIDE([TotalCOGS] * 365, [TotalStockValue], 0)
+        formatString: #,0.0
+        lineageTag: inv-meas-006
+        annotation Description = Inventory turnover (times per year)
+        annotation SynonymList = Inventory Turns, Stock Turn Rate, ITR
+
+    measure GMROI = DIVIDE([TotalGrossProfit], [TotalStockValue], 0)
+        formatString: £#,0.00
+        lineageTag: inv-meas-007
+        annotation Description = Gross Margin Return on Inventory Investment
+        annotation SynonymList = GMROII, Return on Inventory
+
+
+table fact_Waste
+    lineageTag: waste-fact-001
+    description: Product waste, shrinkage, and markdowns
+    
+    column WasteKey
+        dataType: int64
+        isKey: true
+        lineageTag: waste-001
+        summarizeBy: none
+
+    column DateKey
+        dataType: int64
+        lineageTag: waste-002
+        summarizeBy: none
+
+    column StoreKey
+        dataType: int64
+        lineageTag: waste-003
+        summarizeBy: none
+
+    column ProductKey
+        dataType: int64
+        lineageTag: waste-004
+        summarizeBy: none
+
+    column WasteType
+        dataType: string
+        lineageTag: waste-005
+        summarizeBy: none
+        annotation AllowedValues = Expired, Damaged, Theft, Admin Error, Markdown
+        annotation SynonymList = Loss Type, Shrinkage Type
+
+    column WasteQty
+        dataType: int64
+        lineageTag: waste-006
+        summarizeBy: sum
+        annotation SynonymList = Loss Units, Shrink Qty
+
+    column WasteValueCost
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: waste-007
+        summarizeBy: sum
+        annotation Description = Value of waste at cost price
+        annotation SynonymList = Loss Value, Shrinkage Value
+
+    column WasteValueRetail
+        dataType: decimal
+        formatString: £#,0.00
+        lineageTag: waste-008
+        summarizeBy: sum
+        annotation Description = Value of waste at retail price
+
+    // ========== WASTE MEASURES ==========
+
+    measure TotalWasteValue = SUM(fact_Waste[WasteValueCost])
+        formatString: £#,0.00
+        lineageTag: waste-meas-001
+        annotation SynonymList = Total Shrinkage, Total Loss
+
+    measure WasteRate = DIVIDE([TotalWasteValue], [TotalSales], 0)
+        formatString: 0.00%
+        lineageTag: waste-meas-002
+        annotation Description = Waste as percentage of sales
+        annotation SynonymList = Shrinkage Rate, Loss Rate
+
+    measure FoodWaste = CALCULATE([TotalWasteValue], fact_Waste[WasteType] = "Expired")
+        formatString: £#,0.00
+        lineageTag: waste-meas-003
+        annotation Description = Waste from expired products
+        annotation SynonymList = Spoilage, Date Code Waste
+
+    measure TheftLoss = CALCULATE([TotalWasteValue], fact_Waste[WasteType] = "Theft")
+        formatString: £#,0.00
+        lineageTag: waste-meas-004
+        annotation Description = Estimated theft/shrinkage loss
+        annotation SynonymList = Shrinkage, External Loss
+
+
+table fact_Footfall
+    lineageTag: foot-fact-001
+    description: Store traffic/customer footfall counts
+    
+    column FootfallKey
+        dataType: int64
+        isKey: true
+        lineageTag: foot-001
+        summarizeBy: none
+
+    column DateKey
+        dataType: int64
+        lineageTag: foot-002
+        summarizeBy: none
+
+    column StoreKey
+        dataType: int64
+        lineageTag: foot-003
+        summarizeBy: none
+
+    column HourOfDay
+        dataType: int64
+        lineageTag: foot-004
+        summarizeBy: none
+
+    column FootfallCount
+        dataType: int64
+        lineageTag: foot-005
+        summarizeBy: sum
+        annotation Description = Number of customers entering store
+        annotation SynonymList = Traffic, Visitors, Customer Count
+
+    // ========== FOOTFALL MEASURES ==========
+
+    measure TotalFootfall = SUM(fact_Footfall[FootfallCount])
+        formatString: #,0
+        lineageTag: foot-meas-001
+        annotation SynonymList = Total Traffic, Total Visitors
+
+    measure ConversionRate = DIVIDE([TotalTransactions], [TotalFootfall], 0)
+        formatString: 0.0%
+        lineageTag: foot-meas-002
+        annotation Description = Percentage of visitors who made a purchase
+        annotation SynonymList = Conversion, Browse to Buy Rate
+
+    measure SalesPerVisitor = DIVIDE([TotalSales], [TotalFootfall], 0)
+        formatString: £#,0.00
+        lineageTag: foot-meas-003
+        annotation SynonymList = Revenue Per Visitor
+
+
+// ============================================================================
+// RELATIONSHIPS
+// ============================================================================
+
+relationship Sales_to_Date
+    fromColumn: fact_Sales.DateKey
+    toColumn: dim_Date.DateKey
+    crossFilteringBehavior: singleDirection
+
+relationship Sales_to_Store
+    fromColumn: fact_Sales.StoreKey
+    toColumn: dim_Store.StoreKey
+    crossFilteringBehavior: singleDirection
+
+relationship Sales_to_Product
+    fromColumn: fact_Sales.ProductKey
+    toColumn: dim_Product.ProductKey
+    crossFilteringBehavior: singleDirection
+
+relationship Sales_to_Customer
+    fromColumn: fact_Sales.CustomerKey
+    toColumn: dim_Customer.CustomerKey
+    crossFilteringBehavior: singleDirection
+
+relationship Sales_to_Promotion
+    fromColumn: fact_Sales.PromotionKey
+    toColumn: dim_Promotion.PromotionKey
+    crossFilteringBehavior: singleDirection
+
+relationship Inventory_to_Date
+    fromColumn: fact_Inventory.DateKey
+    toColumn: dim_Date.DateKey
+    crossFilteringBehavior: singleDirection
+
+relationship Inventory_to_Store
+    fromColumn: fact_Inventory.StoreKey
+    toColumn: dim_Store.StoreKey
+    crossFilteringBehavior: singleDirection
+
+relationship Inventory_to_Product
+    fromColumn: fact_Inventory.ProductKey
+    toColumn: dim_Product.ProductKey
+    crossFilteringBehavior: singleDirection
+
+relationship Waste_to_Date
+    fromColumn: fact_Waste.DateKey
+    toColumn: dim_Date.DateKey
+    crossFilteringBehavior: singleDirection
+
+relationship Waste_to_Store
+    fromColumn: fact_Waste.StoreKey
+    toColumn: dim_Store.StoreKey
+    crossFilteringBehavior: singleDirection
+
+relationship Waste_to_Product
+    fromColumn: fact_Waste.ProductKey
+    toColumn: dim_Product.ProductKey
+    crossFilteringBehavior: singleDirection
+
+relationship Footfall_to_Date
+    fromColumn: fact_Footfall.DateKey
+    toColumn: dim_Date.DateKey
+    crossFilteringBehavior: singleDirection
+
+relationship Footfall_to_Store
+    fromColumn: fact_Footfall.StoreKey
+    toColumn: dim_Store.StoreKey
+    crossFilteringBehavior: singleDirection
+
+
+
+
+

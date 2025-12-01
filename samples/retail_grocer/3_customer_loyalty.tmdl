@@ -1,0 +1,280 @@
+// ============================================================================
+// DOMAIN: CUSTOMER & LOYALTY
+// Owner: Customer Insights Team
+// Refresh: Daily (overnight), Weekly for segmentation recalc
+// Note: Contains PII - Row-level security enforced
+// ============================================================================
+
+model Customer_Loyalty_Analytics
+    culture: en-GB
+    defaultPowerBIDataSourceVersion: powerBI_V3
+
+table dim_Date
+    lineageTag: shared-date-001
+
+table dim_Store
+    lineageTag: shared-store-001
+
+table dim_Customer
+    lineageTag: cust-001
+    description: Loyalty card holder master (Clubcard/Nectar equivalent)
+    
+    column CustomerKey
+        dataType: int64
+        isKey: true
+
+    column LoyaltyCardNumber
+        dataType: string
+        annotation SynonymList = Clubcard Number, Loyalty ID
+
+    column CustomerSegment
+        dataType: string
+        annotation AllowedValues = Premium, Core, Occasional, Lapsed, New
+        annotation SynonymList = Value Segment, Customer Tier
+
+    column LifestyleSegment
+        dataType: string
+        annotation AllowedValues = Families, Young Professionals, Retirees, Health Conscious, Budget Shoppers, Foodies
+
+    column JoinDate
+        dataType: dateTime
+
+    column PostCodeArea
+        dataType: string
+        annotation Description = First part of postcode
+
+    column HasDeliveryPass
+        dataType: boolean
+        annotation SynonymList = Delivery Saver
+
+    column CLV
+        dataType: decimal
+        annotation SynonymList = Customer Lifetime Value, Total Spend
+
+table fact_CustomerTransactions
+    lineageTag: cust-trans-001
+    description: Aggregated customer shopping behaviour
+    
+    column CustomerKey
+        dataType: int64
+
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column TransactionCount
+        dataType: int64
+        annotation SynonymList = Shop Count, Visits
+
+    column TotalSpend
+        dataType: decimal
+        formatString: £#,0.00
+
+    column AvgBasketValue
+        dataType: decimal
+        formatString: £#,0.00
+        annotation SynonymList = ATV
+
+    column PointsEarned
+        dataType: int64
+        annotation SynonymList = Loyalty Points, Clubcard Points
+
+    column PointsRedeemed
+        dataType: int64
+
+    // === MEASURES ===
+
+    measure TotalCustomers = DISTINCTCOUNT(fact_CustomerTransactions[CustomerKey])
+        formatString: #,0
+        annotation SynonymList = Customer Count, Active Customers
+
+    measure NewCustomers = CALCULATE([TotalCustomers], dim_Customer[JoinDate] >= TODAY() - 90)
+        formatString: #,0
+        annotation Description = Customers joined in last 90 days
+
+    measure CustomerRetentionRate = DIVIDE(CALCULATE([TotalCustomers], fact_CustomerTransactions[TransactionCount] > 1), [TotalCustomers], 0)
+        formatString: 0.0%
+        annotation SynonymList = Repeat Rate
+
+    measure AvgCLV = AVERAGE(dim_Customer[CLV])
+        formatString: £#,0.00
+        annotation SynonymList = Avg Lifetime Value
+
+    measure ShopFrequency = DIVIDE(SUM(fact_CustomerTransactions[TransactionCount]), [TotalCustomers], 0)
+        formatString: #,0.0
+        annotation SynonymList = Visits Per Customer, Shop Rate
+
+    measure LoyaltyPenetration = DIVIDE([TotalCustomers], [TotalTransactions], 0)
+        formatString: 0.0%
+        annotation Description = % of transactions from loyalty members
+        annotation SynonymList = Card Capture Rate
+
+    measure PointsLiability = SUM(dim_Customer[PointsBalance]) * 0.01
+        formatString: £#,0.00
+        annotation Description = Outstanding points value
+
+table fact_BasketAffinity
+    lineageTag: basket-001
+    description: Product co-purchase analysis
+    
+    column ProductA
+        dataType: int64
+
+    column ProductB
+        dataType: int64
+
+    column CoPurchaseCount
+        dataType: int64
+
+    column Lift
+        dataType: decimal
+        annotation Description = How much more likely bought together vs random
+
+    column Confidence
+        dataType: decimal
+        annotation Description = % of ProductA baskets containing ProductB
+
+
+// DOMAIN: CUSTOMER & LOYALTY
+// Owner: Customer Insights Team
+// Refresh: Daily (overnight), Weekly for segmentation recalc
+// Note: Contains PII - Row-level security enforced
+// ============================================================================
+
+model Customer_Loyalty_Analytics
+    culture: en-GB
+    defaultPowerBIDataSourceVersion: powerBI_V3
+
+table dim_Date
+    lineageTag: shared-date-001
+
+table dim_Store
+    lineageTag: shared-store-001
+
+table dim_Customer
+    lineageTag: cust-001
+    description: Loyalty card holder master (Clubcard/Nectar equivalent)
+    
+    column CustomerKey
+        dataType: int64
+        isKey: true
+
+    column LoyaltyCardNumber
+        dataType: string
+        annotation SynonymList = Clubcard Number, Loyalty ID
+
+    column CustomerSegment
+        dataType: string
+        annotation AllowedValues = Premium, Core, Occasional, Lapsed, New
+        annotation SynonymList = Value Segment, Customer Tier
+
+    column LifestyleSegment
+        dataType: string
+        annotation AllowedValues = Families, Young Professionals, Retirees, Health Conscious, Budget Shoppers, Foodies
+
+    column JoinDate
+        dataType: dateTime
+
+    column PostCodeArea
+        dataType: string
+        annotation Description = First part of postcode
+
+    column HasDeliveryPass
+        dataType: boolean
+        annotation SynonymList = Delivery Saver
+
+    column CLV
+        dataType: decimal
+        annotation SynonymList = Customer Lifetime Value, Total Spend
+
+table fact_CustomerTransactions
+    lineageTag: cust-trans-001
+    description: Aggregated customer shopping behaviour
+    
+    column CustomerKey
+        dataType: int64
+
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column TransactionCount
+        dataType: int64
+        annotation SynonymList = Shop Count, Visits
+
+    column TotalSpend
+        dataType: decimal
+        formatString: £#,0.00
+
+    column AvgBasketValue
+        dataType: decimal
+        formatString: £#,0.00
+        annotation SynonymList = ATV
+
+    column PointsEarned
+        dataType: int64
+        annotation SynonymList = Loyalty Points, Clubcard Points
+
+    column PointsRedeemed
+        dataType: int64
+
+    // === MEASURES ===
+
+    measure TotalCustomers = DISTINCTCOUNT(fact_CustomerTransactions[CustomerKey])
+        formatString: #,0
+        annotation SynonymList = Customer Count, Active Customers
+
+    measure NewCustomers = CALCULATE([TotalCustomers], dim_Customer[JoinDate] >= TODAY() - 90)
+        formatString: #,0
+        annotation Description = Customers joined in last 90 days
+
+    measure CustomerRetentionRate = DIVIDE(CALCULATE([TotalCustomers], fact_CustomerTransactions[TransactionCount] > 1), [TotalCustomers], 0)
+        formatString: 0.0%
+        annotation SynonymList = Repeat Rate
+
+    measure AvgCLV = AVERAGE(dim_Customer[CLV])
+        formatString: £#,0.00
+        annotation SynonymList = Avg Lifetime Value
+
+    measure ShopFrequency = DIVIDE(SUM(fact_CustomerTransactions[TransactionCount]), [TotalCustomers], 0)
+        formatString: #,0.0
+        annotation SynonymList = Visits Per Customer, Shop Rate
+
+    measure LoyaltyPenetration = DIVIDE([TotalCustomers], [TotalTransactions], 0)
+        formatString: 0.0%
+        annotation Description = % of transactions from loyalty members
+        annotation SynonymList = Card Capture Rate
+
+    measure PointsLiability = SUM(dim_Customer[PointsBalance]) * 0.01
+        formatString: £#,0.00
+        annotation Description = Outstanding points value
+
+table fact_BasketAffinity
+    lineageTag: basket-001
+    description: Product co-purchase analysis
+    
+    column ProductA
+        dataType: int64
+
+    column ProductB
+        dataType: int64
+
+    column CoPurchaseCount
+        dataType: int64
+
+    column Lift
+        dataType: decimal
+        annotation Description = How much more likely bought together vs random
+
+    column Confidence
+        dataType: decimal
+        annotation Description = % of ProductA baskets containing ProductB
+
+
+
+
+

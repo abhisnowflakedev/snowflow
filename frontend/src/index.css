@@ -1,0 +1,207 @@
+@import "tailwindcss";
+
+/* Base responsive font sizing */
+:root {
+  /* Clamp: min, preferred (viewport-based), max */
+  --font-xs: clamp(9px, 0.55vw, 11px);
+  --font-sm: clamp(10px, 0.65vw, 12px);
+  --font-base: clamp(11px, 0.7vw, 14px);
+  --font-md: clamp(12px, 0.8vw, 16px);
+  --font-lg: clamp(14px, 0.9vw, 18px);
+  --font-xl: clamp(16px, 1vw, 22px);
+  
+  /* Spacing */
+  --space-xs: clamp(4px, 0.3vw, 6px);
+  --space-sm: clamp(6px, 0.4vw, 10px);
+  --space-md: clamp(10px, 0.6vw, 16px);
+  --space-lg: clamp(14px, 0.8vw, 24px);
+  
+  /* Sidebar width - scales with viewport */
+  --sidebar-width: clamp(220px, 14vw, 320px);
+  --panel-width: clamp(320px, 20vw, 420px);
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: var(--font-base);
+}
+
+/* Remove React Flow's default node wrapper styling - but NOT child content */
+.react-flow__node {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.react-flow__node:focus,
+.react-flow__node.selected,
+.react-flow__node.selected:focus {
+  outline: none !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Force all handles to be small round dots */
+.react-flow__handle {
+  width: 8px !important;
+  height: 8px !important;
+  min-width: 8px !important;
+  min-height: 8px !important;
+  max-width: 8px !important;
+  max-height: 8px !important;
+  border-radius: 50% !important;
+  border: 2px solid white !important;
+  box-sizing: border-box !important;
+}
+
+.react-flow__handle-left {
+  left: -4px !important;
+}
+
+.react-flow__handle-right {
+  right: -4px !important;
+}
+
+/* Ultrawide optimizations */
+@media (min-width: 2000px) {
+  :root {
+    --font-xs: 11px;
+    --font-sm: 13px;
+    --font-base: 15px;
+    --font-md: 17px;
+    --font-lg: 20px;
+    --font-xl: 24px;
+    --sidebar-width: 300px;
+    --panel-width: 400px;
+  }
+}
+
+@media (min-width: 2500px) {
+  :root {
+    --font-xs: 12px;
+    --font-sm: 14px;
+    --font-base: 16px;
+    --font-md: 18px;
+    --font-lg: 22px;
+    --font-xl: 28px;
+    --sidebar-width: 340px;
+    --panel-width: 440px;
+  }
+}
+
+@media (min-width: 3000px) {
+  :root {
+    --font-xs: 14px;
+    --font-sm: 16px;
+    --font-base: 18px;
+    --font-md: 20px;
+    --font-lg: 26px;
+    --font-xl: 32px;
+    --sidebar-width: 380px;
+    --panel-width: 500px;
+  }
+}
+
+/* Pulse animation for indicators */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Node glow when active */
+@keyframes glow-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 3px rgba(41, 181, 232, 0.3), 0 0 20px 4px rgba(41, 181, 232, 0.5);
+  }
+  50% { 
+    box-shadow: 0 0 0 4px rgba(41, 181, 232, 0.5), 0 0 32px 8px rgba(41, 181, 232, 0.7);
+  }
+}
+
+/* Removed old edge animations - now using solid edges only */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CLEAN, PROFESSIONAL NODE STATES - No flashy effects
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Active node - subtle orange border, no crazy glow */
+.react-flow__node.active-node {
+  border: 3px solid #F59E0B !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+  z-index: 100 !important;
+  transform: scale(1.02);
+  transition: all 0.2s ease;
+}
+
+/* Completed node - subtle green border */
+.react-flow__node.completed-node {
+  border: 2px solid #10B981 !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Simulated node - purple border with small badge */
+.react-flow__node.simulated-node {
+  border: 2px solid #8B5CF6 !important;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2) !important;
+  position: relative;
+}
+
+/* Small "SIM" badge for simulated nodes */
+.react-flow__node.simulated-node::after {
+  content: 'SIM';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #8B5CF6;
+  color: white;
+  font-size: 7px;
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* Active edge - orange highlight */
+.react-flow__edge.active-edge path {
+  stroke: #F59E0B;
+  stroke-width: 3;
+  opacity: 1;
+}
+
+/* Completed edge - green */
+.react-flow__edge.completed-edge path {
+  stroke: #10B981;
+  stroke-width: 2;
+  opacity: 1;
+}
+
+/* Default/Idle edges - Snowflake blue */
+.react-flow__edge path,
+.react-flow__edge.idle-edge path {
+  stroke: #29B5E8;
+  stroke-width: 2;
+  transition: stroke 0.3s ease, stroke-width 0.3s ease;
+}
+
+/* Keep React Flow's default animated dashes */
+
+/* Ensure edge paths are visible */
+.react-flow__edge path.react-flow__edge-path {
+  fill: none;
+  stroke-linecap: round;
+}
+
+/* Smooth animations */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

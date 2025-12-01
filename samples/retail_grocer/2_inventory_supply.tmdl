@@ -1,0 +1,284 @@
+// ============================================================================
+// DOMAIN: INVENTORY & SUPPLY CHAIN
+// Owner: Supply Chain Analytics Team
+// Refresh: Every 4 hours, Real-time for critical OOS alerts
+// ============================================================================
+
+model Inventory_Supply_Analytics
+    culture: en-GB
+    defaultPowerBIDataSourceVersion: powerBI_V3
+
+table dim_Date
+    lineageTag: shared-date-001
+
+table dim_Store
+    lineageTag: shared-store-001
+
+table dim_Product
+    lineageTag: shared-prod-001
+
+table dim_Supplier
+    lineageTag: supp-001
+    description: Supplier/vendor master
+    
+    column SupplierKey
+        dataType: int64
+        isKey: true
+
+    column SupplierName
+        dataType: string
+        annotation SynonymList = Vendor Name
+
+    column LeadTimeDays
+        dataType: int64
+        annotation SynonymList = Delivery Time
+
+    column IsDirectDelivery
+        dataType: boolean
+        annotation Description = DSD - Direct Store Delivery
+
+table fact_Inventory
+    lineageTag: inv-001
+    description: Daily stock position snapshot
+    
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column ProductKey
+        dataType: int64
+
+    column OnHandQty
+        dataType: int64
+        annotation SynonymList = Stock On Hand, SOH
+
+    column OnHandValue
+        dataType: decimal
+        formatString: £#,0.00
+        annotation SynonymList = Stock Value
+
+    column OnOrderQty
+        dataType: int64
+        annotation SynonymList = Pipeline Stock, In Transit
+
+    column DaysOfSupply
+        dataType: decimal
+        annotation SynonymList = DOS, Stock Cover
+
+    column IsOutOfStock
+        dataType: boolean
+        annotation SynonymList = OOS
+
+    // === MEASURES ===
+
+    measure TotalStockUnits = SUM(fact_Inventory[OnHandQty])
+        formatString: #,0
+
+    measure TotalStockValue = SUM(fact_Inventory[OnHandValue])
+        formatString: £#,0.00
+
+    measure AvgDaysOfSupply = AVERAGE(fact_Inventory[DaysOfSupply])
+        formatString: #,0.0
+        annotation SynonymList = Avg Stock Cover
+
+    measure OOSCount = CALCULATE(COUNTROWS(fact_Inventory), fact_Inventory[IsOutOfStock] = TRUE)
+        formatString: #,0
+        annotation SynonymList = Out of Stock Items
+
+    measure InStockRate = 1 - DIVIDE([OOSCount], COUNTROWS(fact_Inventory), 0)
+        formatString: 0.0%
+        annotation SynonymList = Availability, OSA, On Shelf Availability
+
+    measure StockTurnover = DIVIDE([TotalCOGS] * 365, [TotalStockValue], 0)
+        formatString: #,0.0
+        annotation SynonymList = Inventory Turns, Stock Turn
+
+table fact_Replenishment
+    lineageTag: repl-001
+    description: Replenishment orders and deliveries
+    
+    column OrderDate
+        dataType: dateTime
+
+    column DeliveryDate
+        dataType: dateTime
+
+    column StoreKey
+        dataType: int64
+
+    column ProductKey
+        dataType: int64
+
+    column SupplierKey
+        dataType: int64
+
+    column OrderedQty
+        dataType: int64
+
+    column ReceivedQty
+        dataType: int64
+
+    column IsOnTime
+        dataType: boolean
+        annotation Description = Delivered within agreed window
+
+    column IsInFull
+        dataType: boolean
+        annotation Description = Full quantity received
+
+    // === MEASURES ===
+
+    measure OTIF = DIVIDE(CALCULATE(COUNTROWS(fact_Replenishment), fact_Replenishment[IsOnTime] = TRUE && fact_Replenishment[IsInFull] = TRUE), COUNTROWS(fact_Replenishment), 0)
+        formatString: 0.0%
+        annotation Description = On Time In Full - supplier performance
+        annotation SynonymList = Supplier Performance, Delivery Performance
+
+    measure FillRate = DIVIDE(SUM(fact_Replenishment[ReceivedQty]), SUM(fact_Replenishment[OrderedQty]), 0)
+        formatString: 0.0%
+
+
+// DOMAIN: INVENTORY & SUPPLY CHAIN
+// Owner: Supply Chain Analytics Team
+// Refresh: Every 4 hours, Real-time for critical OOS alerts
+// ============================================================================
+
+model Inventory_Supply_Analytics
+    culture: en-GB
+    defaultPowerBIDataSourceVersion: powerBI_V3
+
+table dim_Date
+    lineageTag: shared-date-001
+
+table dim_Store
+    lineageTag: shared-store-001
+
+table dim_Product
+    lineageTag: shared-prod-001
+
+table dim_Supplier
+    lineageTag: supp-001
+    description: Supplier/vendor master
+    
+    column SupplierKey
+        dataType: int64
+        isKey: true
+
+    column SupplierName
+        dataType: string
+        annotation SynonymList = Vendor Name
+
+    column LeadTimeDays
+        dataType: int64
+        annotation SynonymList = Delivery Time
+
+    column IsDirectDelivery
+        dataType: boolean
+        annotation Description = DSD - Direct Store Delivery
+
+table fact_Inventory
+    lineageTag: inv-001
+    description: Daily stock position snapshot
+    
+    column DateKey
+        dataType: int64
+
+    column StoreKey
+        dataType: int64
+
+    column ProductKey
+        dataType: int64
+
+    column OnHandQty
+        dataType: int64
+        annotation SynonymList = Stock On Hand, SOH
+
+    column OnHandValue
+        dataType: decimal
+        formatString: £#,0.00
+        annotation SynonymList = Stock Value
+
+    column OnOrderQty
+        dataType: int64
+        annotation SynonymList = Pipeline Stock, In Transit
+
+    column DaysOfSupply
+        dataType: decimal
+        annotation SynonymList = DOS, Stock Cover
+
+    column IsOutOfStock
+        dataType: boolean
+        annotation SynonymList = OOS
+
+    // === MEASURES ===
+
+    measure TotalStockUnits = SUM(fact_Inventory[OnHandQty])
+        formatString: #,0
+
+    measure TotalStockValue = SUM(fact_Inventory[OnHandValue])
+        formatString: £#,0.00
+
+    measure AvgDaysOfSupply = AVERAGE(fact_Inventory[DaysOfSupply])
+        formatString: #,0.0
+        annotation SynonymList = Avg Stock Cover
+
+    measure OOSCount = CALCULATE(COUNTROWS(fact_Inventory), fact_Inventory[IsOutOfStock] = TRUE)
+        formatString: #,0
+        annotation SynonymList = Out of Stock Items
+
+    measure InStockRate = 1 - DIVIDE([OOSCount], COUNTROWS(fact_Inventory), 0)
+        formatString: 0.0%
+        annotation SynonymList = Availability, OSA, On Shelf Availability
+
+    measure StockTurnover = DIVIDE([TotalCOGS] * 365, [TotalStockValue], 0)
+        formatString: #,0.0
+        annotation SynonymList = Inventory Turns, Stock Turn
+
+table fact_Replenishment
+    lineageTag: repl-001
+    description: Replenishment orders and deliveries
+    
+    column OrderDate
+        dataType: dateTime
+
+    column DeliveryDate
+        dataType: dateTime
+
+    column StoreKey
+        dataType: int64
+
+    column ProductKey
+        dataType: int64
+
+    column SupplierKey
+        dataType: int64
+
+    column OrderedQty
+        dataType: int64
+
+    column ReceivedQty
+        dataType: int64
+
+    column IsOnTime
+        dataType: boolean
+        annotation Description = Delivered within agreed window
+
+    column IsInFull
+        dataType: boolean
+        annotation Description = Full quantity received
+
+    // === MEASURES ===
+
+    measure OTIF = DIVIDE(CALCULATE(COUNTROWS(fact_Replenishment), fact_Replenishment[IsOnTime] = TRUE && fact_Replenishment[IsInFull] = TRUE), COUNTROWS(fact_Replenishment), 0)
+        formatString: 0.0%
+        annotation Description = On Time In Full - supplier performance
+        annotation SynonymList = Supplier Performance, Delivery Performance
+
+    measure FillRate = DIVIDE(SUM(fact_Replenishment[ReceivedQty]), SUM(fact_Replenishment[OrderedQty]), 0)
+        formatString: 0.0%
+
+
+
+
+
