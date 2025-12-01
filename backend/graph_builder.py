@@ -2414,7 +2414,7 @@ async def execute_workflow_streaming(nodes: List[Dict], edges: List[Dict], promp
         last_activity_time = time.time()
         last_heartbeat_time = time.time()
         start_time = time.time()
-        INACTIVITY_TIMEOUT = 45.0  # Force completion after 45 seconds of no activity (LLM calls can take 20-30s)
+        INACTIVITY_TIMEOUT = 90.0  # Force completion after 90 seconds of no activity (Cortex LLM calls can take 30-60s)
         MAX_TOTAL_TIMEOUT = 300.0  # Max 5 minutes total execution time
         HEARTBEAT_INTERVAL = 3.0  # Send heartbeat every 3 seconds to keep SSE alive
         
