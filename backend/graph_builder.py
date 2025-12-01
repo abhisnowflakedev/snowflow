@@ -37,11 +37,13 @@ _shared_results = {}
 _results_lock = threading.Lock()
 
 def set_shared_results(results: dict):
-    """Store results that can be accessed by the event loop"""
+    """Store results that can be accessed by the event loop - MERGES with existing"""
     global _shared_results
     with _results_lock:
-        _shared_results = results.copy() if results else {}
-        print(f"[RESULTS] Stored {len(str(_shared_results))} chars of results")
+        # MERGE with existing results (don't overwrite generated_yaml etc)
+        if results:
+            _shared_results.update(results)
+        print(f"[RESULTS] Merged results, now {len(str(_shared_results))} chars")
 
 def update_shared_results(key: str, value):
     """Update a specific key in shared results without overwriting"""
@@ -2599,6 +2601,10 @@ async def execute_workflow_streaming(nodes: List[Dict], edges: List[Dict], promp
                                 exec_messages.append(f"Query routed to: {agents_consulted[0]}")
                         
                         print(f"[FAN-IN] Execution messages: {len(exec_messages)} items")
+                        print(f"[FAN-IN] stored_results keys: {list(stored_results.keys())}")
+                        print(f"[FAN-IN] generated_yaml in results: {'generated_yaml' in stored_results}")
+                        if 'generated_yaml' in stored_results:
+                            print(f"[FAN-IN] YAML length: {len(stored_results['generated_yaml'])} chars")
                         
                         yield {
                             'type': 'complete',
