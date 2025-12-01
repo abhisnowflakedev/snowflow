@@ -1963,14 +1963,22 @@ function Flow() {
             } else if (eventData.type === 'complete') {
               // Update fileOutput nodes with generated content using store
               const results = eventData.results || {};
+              console.log('[COMPLETE] Results received:', Object.keys(results));
+              console.log('[COMPLETE] generated_yaml:', results.generated_yaml ? `${results.generated_yaml.length} chars` : 'NONE');
+              
               if (results.output_content || results.generated_yaml) {
                 const yamlContent = results.output_content || results.generated_yaml;
-                // Find and update all fileOutput nodes
-                nodes.forEach(n => {
+                console.log('[COMPLETE] Updating fileOutput nodes with YAML content:', yamlContent.length, 'chars');
+                // Get current nodes from store (not the stale closure)
+                const currentNodes = useFlowStore.getState().nodes;
+                currentNodes.forEach(n => {
                   if (n.type === 'fileOutput') {
+                    console.log('[COMPLETE] Updating node:', n.id);
                     updateNodeData(n.id, { generatedContent: yamlContent });
                   }
                 });
+              } else {
+                console.log('[COMPLETE] No YAML content in results');
               }
               
               // Track simulated nodes for visual differentiation
