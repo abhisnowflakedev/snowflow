@@ -2512,33 +2512,77 @@ async def execute_workflow_streaming(nodes: List[Dict], edges: List[Dict], promp
                         stored_results = get_shared_results()
                         print(f"[FAN-IN] Retrieved results: {len(str(stored_results))} chars")
                         
-                        # Build execution messages for stats
-                        exec_messages = ['Workflow completed successfully']
+                        # Build rich execution messages for detailed timeline
+                        exec_messages = []
                         
                         # Get agents that were actually consulted (from stored results)
                         agents_consulted = stored_results.get('agents_consulted', [])
+                        supervisor_name = stored_results.get('supervisor', 'Supervisor')
+                        model_used = stored_results.get('model', 'mistral-large2')
                         
-                        # Count agents - only those that were selected AND completed
-                        agent_nodes = [n for n in completed_nodes if n.startswith('agent-')]
-                        for agent in agent_nodes:
-                            # Only add to messages if this agent was consulted
+                        # Phase 1: Workflow start
+                        exec_messages.append("🚀 Workflow execution started")
+                        
+                        # Phase 2: Context loading
+                        context_nodes = [n for n in completed_nodes if n.startswith('tmdl-')]
+                        if context_nodes:
+                            exec_messages.append("📦 Loading context from data sources...")
+                            for ctx in sorted(context_nodes):
+                                ctx_name = ctx.replace('tmdl-', '').title()
+                                exec_messages.append(f"📊 Loaded: {ctx_name} TMDL")
+                        
+                        # Phase 3: External agents
+                        if 'pbi-copilot' in completed_nodes:
+                            exec_messages.append("🟦 Power BI Copilot: Connected (simulated)")
+                        if 'agent-gateway' in completed_nodes:
+                            exec_messages.append("🛡️ Agent Gateway: Routing established")
+                        
+                        # Phase 4: Schema/DAX processing
+                        if 'dax-translator' in completed_nodes:
+                            exec_messages.append("⚡ DAX Translator: Converted DAX → Snowflake SQL")
+                        if 'schema-transformer' in completed_nodes:
+                            exec_messages.append("🔄 Schema Transformer: Generated Cortex Analyst YAML")
+                        
+                        # Phase 5: Semantic views
+                        sv_nodes = [n for n in completed_nodes if n.startswith('sv-')]
+                        if sv_nodes:
+                            exec_messages.append("📊 Loading Semantic Models...")
+                            for sv in sorted(sv_nodes):
+                                sv_name = sv.replace('sv-', '').title()
+                                exec_messages.append(f"   ❄️ {sv_name} SV loaded")
+                        
+                        # Phase 6: YAML output
+                        if 'yaml-output' in completed_nodes:
+                            exec_messages.append("📄 Cortex YAML Bundle: Ready for download")
+                        
+                        # Phase 7: Supervisor orchestration
+                        if 'supervisor' in completed_nodes:
+                            exec_messages.append(f"👔 Supervisor '{supervisor_name}' analyzing query...")
+                            exec_messages.append(f"🧠 Planning: Determining relevant agents...")
+                            if agents_consulted:
+                                exec_messages.append(f"📋 Plan: Consult {agents_consulted}")
+                        
+                        # Phase 8: Agent execution
+                        agent_nodes = [n for n in completed_nodes if n.startswith('agent-') and n != 'agent-gateway']
+                        for agent in sorted(agent_nodes):
                             agent_name = agent.replace('agent-', '').title()
                             if any(ac.lower() in agent_name.lower() or agent_name.lower() in ac.lower() for ac in agents_consulted):
-                                exec_messages.append(f"Agent {agent} completed")
-                            # Also include always-execute agents (callbacks)
-                            elif any(kw in agent.lower() for kw in ['callback', 'gateway']):
-                                exec_messages.append(f"Agent {agent} completed")
+                                exec_messages.append(f"🤖 {agent_name} Agent: Analyzing data with {model_used}...")
+                                exec_messages.append(f"✅ {agent_name} Agent: Response generated")
                         
-                        # Count semantic views (nodes with 'sv-' prefix)
-                        sv_nodes = [n for n in completed_nodes if n.startswith('sv-')]
-                        for sv in sv_nodes:
-                            exec_messages.append(f"Semantic View {sv} loaded")
+                        # Phase 9: Callback
+                        if 'pbi-callback' in completed_nodes:
+                            exec_messages.append("🔄 Power BI Callback: Response sent to Copilot")
                         
-                        # Add routing info from stored results
-                        agents_consulted = stored_results.get('agents_consulted', [])
+                        # Phase 10: Completion
+                        exec_messages.append("✅ Workflow completed successfully")
+                        
+                        # Add routing summary for stats
                         if agents_consulted:
-                            exec_messages.append(f"Plan: Consult {agents_consulted}")
-                            exec_messages.append(f"MULTI-DOMAIN query routed to: {', '.join(agents_consulted)}")
+                            if len(agents_consulted) > 1:
+                                exec_messages.append(f"MULTI-DOMAIN query routed to: {', '.join(agents_consulted)}")
+                            else:
+                                exec_messages.append(f"Query routed to: {agents_consulted[0]}")
                         
                         print(f"[FAN-IN] Execution messages: {len(exec_messages)} items")
                         
