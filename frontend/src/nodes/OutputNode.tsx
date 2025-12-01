@@ -180,14 +180,18 @@ export const OutputNode = ({ data, selected }: { data: OutputNodeData; selected?
       
       {/* Preview Panel - EXACT same style as FileOutputNode */}
       {showPreview && hasContent && (
-        <div style={{
-          marginTop: 8,
-          padding: 8,
-          background: '#1F2937',
-          borderRadius: 6,
-          maxHeight: 150,
-          overflow: 'auto',
-        }}>
+        <div 
+          onClick={(e) => e.stopPropagation()}
+          onWheel={(e) => e.stopPropagation()}
+          style={{
+            marginTop: 8,
+            padding: 8,
+            background: '#1F2937',
+            borderRadius: 6,
+            maxHeight: 150,
+            overflow: 'auto',
+          }}
+        >
           <pre style={{
             margin: 0,
             fontSize: 9,

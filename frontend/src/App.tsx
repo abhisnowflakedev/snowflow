@@ -1966,19 +1966,20 @@ function Flow() {
               console.log('[COMPLETE] Results received:', Object.keys(results));
               console.log('[COMPLETE] generated_yaml:', results.generated_yaml ? `${results.generated_yaml.length} chars` : 'NONE');
               
-              if (results.output_content || results.generated_yaml) {
-                const yamlContent = results.output_content || results.generated_yaml;
-                console.log('[COMPLETE] Updating fileOutput nodes with YAML content:', yamlContent.length, 'chars');
+              if (results.output_content || results.generated_yaml || results.response) {
+                const content = results.output_content || results.generated_yaml || results.response;
+                console.log('[COMPLETE] Updating output nodes with content:', content.length, 'chars');
                 // Get current nodes from store (not the stale closure)
                 const currentNodes = useFlowStore.getState().nodes;
                 currentNodes.forEach(n => {
-                  if (n.type === 'fileOutput') {
-                    console.log('[COMPLETE] Updating node:', n.id);
-                    updateNodeData(n.id, { generatedContent: yamlContent });
+                  // Update both fileOutput AND output type nodes
+                  if (n.type === 'fileOutput' || n.type === 'output') {
+                    console.log('[COMPLETE] Updating node:', n.id, 'type:', n.type);
+                    updateNodeData(n.id, { generatedContent: content });
                   }
                 });
               } else {
-                console.log('[COMPLETE] No YAML content in results');
+                console.log('[COMPLETE] No content in results');
               }
               
               // Track simulated nodes for visual differentiation
